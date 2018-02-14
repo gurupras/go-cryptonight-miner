@@ -1,4 +1,5 @@
 build
+test-config.yaml
 *.so
 *.a
 .*.sw*
