@@ -1,8 +1,12 @@
 #include "helpers.h"
 #include "miner.h"
 
+#include <stdlib.h>
+
 #if defined __unix__ && (!defined __APPLE__) && (!defined DISABLE_LINUX_HUGEPAGES)
 #include <sys/mman.h>
+#include <unistd.h>
+#include <sys/types.h>
 #elif defined _WIN32
 #include <windows.h>
 #endif

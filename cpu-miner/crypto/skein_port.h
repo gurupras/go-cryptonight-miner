@@ -3,6 +3,7 @@
 
 #include <limits.h>
 #include <stdint.h>
+#include <stddef.h>
 
 #ifndef RETURN_VALUES
 #  define RETURN_VALUES

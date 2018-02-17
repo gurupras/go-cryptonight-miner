@@ -12,6 +12,7 @@
 #include "miner.h"
 
 #include <stdio.h>
+#include <stdlib.h>
 #if defined __unix__ && (!defined __APPLE__)
 #include <sys/mman.h>
 #elif defined _WIN32
