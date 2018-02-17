@@ -9,8 +9,9 @@
 #include "c_jh.h"
 #include "c_skein.h"
 #include "cryptonight.h"
+#include "miner.h"
 
-
+#include <stdio.h>
 #if defined __unix__ && (!defined __APPLE__)
 #include <sys/mman.h>
 #elif defined _WIN32
@@ -46,14 +47,14 @@ void cryptonight_hash(void* output, const void* input, size_t len) {
     free(ctx);
 }
 
-#if 0
-int scanhash_cryptonight(int thr_id, uint32_t *restrict pdata, const uint32_t *restrict ptarget, uint32_t max_nonce, unsigned long *restrict hashes_done, struct cryptonight_ctx *persistentctx) {
+
+int scanhash_cryptonight(int thr_id, uint32_t *restrict pdata, const uint32_t *restrict ptarget, uint32_t max_nonce, unsigned long *restrict hashes_done, struct cryptonight_ctx *persistentctx, int *restart) {
     uint32_t *nonceptr = (uint32_t*) (((char*)pdata) + 39);
     uint32_t n = *nonceptr - 1;
     const uint32_t first_nonce = n + 1;
     const uint32_t Htarg = ptarget[7];
     uint32_t hash[32 / 4] __attribute__((aligned(32)));
-
+    // printf("%s: nonce=%u max_nonce=%u restart=%d\n", __func__, *nonceptr, max_nonce, *restart);
 	do {
 		*nonceptr = ++n;
 		cryptonight_hash_ctx(hash, pdata, persistentctx);
@@ -61,9 +62,8 @@ int scanhash_cryptonight(int thr_id, uint32_t *restrict pdata, const uint32_t *r
 			*hashes_done = n - first_nonce + 1;
 			return true;
 		}
-	} while (likely((n <= max_nonce && !work_restart[thr_id].restart)));
+	} while (likely((n <= max_nonce && !(*restart))));
 
     *hashes_done = n - first_nonce + 1;
     return 0;
 }
-#endif

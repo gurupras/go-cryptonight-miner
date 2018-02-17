@@ -181,7 +181,7 @@ extern int scanhash_x11(int thr_id, uint32_t *pdata, const uint32_t *ptarget,
 extern void cryptonight_hash(void* output, const void* input, size_t input_len);
 
 extern int scanhash_cryptonight(int thr_id, uint32_t *pdata, const uint32_t *ptarget,
-		uint32_t max_nonce, unsigned long *hashes_done, struct cryptonight_ctx *persistentctx);
+		uint32_t max_nonce, unsigned long *hashes_done, struct cryptonight_ctx *persistentctx, int *restart);
 
 struct thr_info {
 	int		id;
@@ -210,7 +210,7 @@ extern pthread_mutex_t applog_lock;
 extern struct thr_info *thr_info;
 extern int longpoll_thr_id;
 extern int stratum_thr_id;
-extern struct work_restart *work_restart;
+extern struct work_restart *work_restart;	// FIXME: Hard-coded
 extern bool jsonrpc_2;
 
 extern char *bin2hex(const unsigned char *p, size_t len);

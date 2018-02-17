@@ -16,7 +16,7 @@ CC_OPTS= $(CFLAGS) $(LDFLAGS) -maes
 CC=gcc
 LD=ld
 
-sources=cryptonight_aesni.c cryptonight_common.c c_blake256.c c_groestl.c  c_jh.c c_keccak.c c_skein.c hash.c oaes_lib.c
+sources=cryptonight_aesni.c cryptonight_common.c c_blake256.c c_groestl.c  c_jh.c c_keccak.c c_skein.c hash.c oaes_lib.c test.c helpers.c
 objs=$(patsubst %.c,build/%.o,$(sources))
 
 
@@ -32,7 +32,8 @@ setup:
 	@mkdir -p build
 
 build: built-in.o
-	$(call shared_library, $<, $(LIB_NAME))
+	$(call shared_library, $<, $(LIB_NAME).so)
+	$(call static_library, $<, $(LIB_NAME).a)
 built-in.o: $(objs)
 	$(call link, $(objs), $@)
 

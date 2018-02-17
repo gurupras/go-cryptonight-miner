@@ -47,28 +47,49 @@ func TestAuthorize(t *testing.T) {
 	err := connect(sc)
 	require.Nil(err)
 
+	wg := sync.WaitGroup{}
+	wg.Add(1)
+
+	workChan := make(chan *Work)
+	sc.RegisterWorkListener(workChan)
+
+	go func() {
+		for _ = range workChan {
+			wg.Done()
+		}
+	}()
+
 	err = sc.Authorize(testConfig["username"].(string), testConfig["pass"].(string))
 	require.Nil(err)
+	wg.Wait()
 }
 
-func TestParseWork(t *testing.T) {
-	// t.Skip("Usually skip since this is an infinite loop test")
+func TestGetJob(t *testing.T) {
+	t.Skip("Cannot arbitrarily call sc.GetJob()")
 	require := require.New(t)
 
 	sc := New()
 	err := connect(sc)
 	require.Nil(err)
 
+	wg := sync.WaitGroup{}
+	wg.Add(2)
+
+	workChan := make(chan *Work)
+	sc.RegisterWorkListener(workChan)
+
+	go func() {
+		for _ = range workChan {
+			log.Debugf("Calling wg.Done()")
+			wg.Done()
+		}
+	}()
+
 	err = sc.Authorize(testConfig["username"].(string), testConfig["pass"].(string))
 	require.Nil(err)
 
-	wg := sync.WaitGroup{}
-	wg.Add(1)
-	go func() {
-		for work := range sc.WorkChan {
-			log.Infof("Got new work - difficulty: %d", work.Difficulty)
-		}
-	}()
+	err = sc.GetJob()
+	require.Nil(err)
 	wg.Wait()
 }
 
