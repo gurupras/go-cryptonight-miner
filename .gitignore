@@ -3,3 +3,4 @@ test-config.yaml
 *.so
 *.a
 .*.sw*
+*profile.out
