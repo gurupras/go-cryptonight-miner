@@ -1,7 +1,6 @@
 package cpuminer
 
 import (
-	"fmt"
 	"io/ioutil"
 	"os"
 	"strings"
@@ -17,43 +16,10 @@ import (
 
 var testConfig map[string]interface{}
 
-func TestCryptonightSolver(t *testing.T) {
+type constructor func(sc *stratum.StratumContext) Interface
+
+func testCPUMiner(t *testing.T, numMiners int, constructor constructor) {
 	require := require.New(t)
-	log.SetLevel(log.DebugLevel)
-
-	port := 8813
-	server, err := stratum.NewTestServer(port)
-	require.Nil(err)
-
-	wg := sync.WaitGroup{}
-	wg.Add(1)
-	go func() {
-		for clientRequest := range server.RequestChan {
-			if strings.Compare(clientRequest.Request.RemoteMethod, "login") == 0 {
-				if _, err := clientRequest.Conn.Write([]byte(stratum.TEST_JOB_STR)); err != nil {
-					log.Errorf("Failed to send client test job: %v", err)
-				}
-			} else {
-				log.Infof("Received request: %v", clientRequest.Request)
-			}
-		}
-	}()
-
-	st := stratum.New()
-	miner := New(st)
-	go miner.Run()
-
-	err = st.Connect(fmt.Sprintf("localhost:%d", port))
-	require.Nil(err)
-	err = st.Authorize("x", "y")
-	require.Nil(err)
-
-	wg.Wait()
-}
-
-func TestMiner(t *testing.T) {
-	require := require.New(t)
-	log.SetLevel(log.DebugLevel)
 
 	sc := stratum.New()
 
@@ -78,10 +44,9 @@ func TestMiner(t *testing.T) {
 		}
 	}()
 
-	numMiners := 4
-	miners := make([]*CPUMiner, numMiners)
+	miners := make([]Interface, numMiners)
 	for i := 0; i < numMiners; i++ {
-		miner := New(sc)
+		miner := constructor(sc)
 		miner.RegisterHashrateListener(hashrateChan)
 		miners[i] = miner
 	}
@@ -91,13 +56,16 @@ func TestMiner(t *testing.T) {
 	}
 
 	responseChan := make(chan *stratum.Response)
-	validShares := 3
+	validShares := 10
 	go func() {
-		response := <-responseChan
-		_ = response
-		validShares--
-		if validShares == 0 {
-			wg.Done()
+		for response := range responseChan {
+			if strings.Compare(response.Result["status"].(string), "OK") == 0 {
+				validShares--
+				if validShares == 0 {
+					log.Infof("Valid shares requirement met. Terminating test")
+					wg.Done()
+				}
+			}
 		}
 	}()
 
@@ -113,7 +81,7 @@ func TestMiner(t *testing.T) {
 }
 
 func TestMain(m *testing.M) {
-	log.SetLevel(log.WarnLevel)
+	log.SetLevel(log.InfoLevel)
 
 	b, err := ioutil.ReadFile("test-config.yaml")
 	if err != nil {

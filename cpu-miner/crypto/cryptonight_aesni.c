@@ -87,7 +87,7 @@ static inline void ExpandAESKey256(char *keybuf)
 	keys[14] = tmp1;
 }
 
-void cryptonight_hash_ctx(void *restrict output, const void *restrict input, struct cryptonight_ctx *restrict ctx)
+void cryptonight_hash_ctx_aesni(void *restrict output, const void *restrict input, struct cryptonight_ctx *restrict ctx)
 {
 	keccak((const uint8_t *)input, 76, &ctx->state.hs, 200);
     uint8_t ExpandedKey[256];

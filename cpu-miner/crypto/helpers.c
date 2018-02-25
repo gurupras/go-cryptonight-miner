@@ -2,6 +2,7 @@
 #include "miner.h"
 
 #include <stdlib.h>
+#include <stdio.h>
 
 #if defined __unix__ && (!defined __APPLE__) && (!defined DISABLE_LINUX_HUGEPAGES)
 #include <sys/mman.h>
@@ -19,8 +20,11 @@ void *setup_persistent_ctx() {
 	madvise(persistentctx, sizeof(struct cryptonight_ctx), MADV_RANDOM | MADV_WILLNEED | MADV_HUGEPAGE);
 	if(!geteuid()) mlock(persistentctx, sizeof(struct cryptonight_ctx));
 	#elif defined _WIN32
-	persistentctx = VirtualAlloc(NULL, sizeof(struct cryptonight_ctx), MEM_LARGE_PAGES, PAGE_READWRITE);
-	if(!persistentctx) persistentctx = (struct cryptonight_ctx *)malloc(sizeof(struct cryptonight_ctx));
+	persistentctx = VirtualAlloc(NULL, sizeof(struct cryptonight_ctx), MEM_COMMIT | MEM_RESERVE | MEM_LARGE_PAGES, PAGE_READWRITE);
+	if(!persistentctx) {
+    printf("Failed to call VirtualAlloc()");
+    persistentctx = (struct cryptonight_ctx *)malloc(sizeof(struct cryptonight_ctx));
+  }
 	#else
 	persistentctx = (struct cryptonight_ctx *)malloc(sizeof(struct cryptonight_ctx));
 	#endif

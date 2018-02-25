@@ -44,7 +44,7 @@ void (* const extra_hashes[4])(const void *, size_t, char *) = {do_blake_hash, d
 
 void cryptonight_hash(void* output, const void* input, size_t len) {
     struct cryptonight_ctx *ctx = (struct cryptonight_ctx*)malloc(sizeof(struct cryptonight_ctx));
-    cryptonight_hash_ctx(output, input, ctx);
+    cryptonight_hash_ctx_aesni(output, input, ctx);
     free(ctx);
 }
 
@@ -58,7 +58,7 @@ int scanhash_cryptonight(int thr_id, uint32_t *restrict pdata, const uint32_t *r
     // printf("%s: nonce=%u max_nonce=%u restart=%d\n", __func__, *nonceptr, max_nonce, *restart);
 	do {
 		*nonceptr = ++n;
-		cryptonight_hash_ctx(hash, pdata, persistentctx);
+		cryptonight_hash_ctx_aesni(hash, pdata, persistentctx);
 		if (unlikely(hash[7] < ptarget[7])) {
 			*hashes_done = n - first_nonce + 1;
 			return true;
