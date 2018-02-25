@@ -3,7 +3,6 @@ package stratum
 import (
 	"bufio"
 	"encoding/json"
-	"fmt"
 	"net"
 	"strings"
 	"time"
@@ -13,21 +12,24 @@ import (
 )
 
 var (
-	KeepAliveDuration time.Duration = 5 * time.Second
+	KeepAliveDuration time.Duration = 60 * time.Second
 )
 
 type StratumOnWorkHandler func(work *Work)
 type StratumContext struct {
 	net.Conn
-	reader            *bufio.Reader
-	id                int
-	SessionID         string
-	KeepAliveDuration time.Duration
-	Work              *Work
-	workListeners     set.Interface
-	submitListeners   set.Interface
-	responseListeners set.Interface
-	LastSubmittedWork *Work
+	reader                  *bufio.Reader
+	id                      int
+	SessionID               string
+	KeepAliveDuration       time.Duration
+	Work                    *Work
+	workListeners           set.Interface
+	submitListeners         set.Interface
+	responseListeners       set.Interface
+	LastSubmittedWork       *Work
+	submittedWorkRequestIds set.Interface
+	numAcceptedResults      uint64
+	numSubmittedResults     uint64
 }
 
 func New() *StratumContext {
@@ -36,6 +38,7 @@ func New() *StratumContext {
 	sc.workListeners = set.New()
 	sc.submitListeners = set.New()
 	sc.responseListeners = set.New()
+	sc.submittedWorkRequestIds = set.New()
 	return sc
 }
 
@@ -51,25 +54,18 @@ func (sc *StratumContext) Connect(addr string) error {
 	return nil
 }
 
-func (sc *StratumContext) Subscribe() error {
-	if err := sc.Call(RPC_SUBSCRIBE_METHOD, []string{}); err != nil {
-		return fmt.Errorf("Failed to subscribe: %v", err)
-	}
-	return nil
-}
-
-func (sc *StratumContext) Call(serviceMethod string, args interface{}) error {
+func (sc *StratumContext) Call(serviceMethod string, args interface{}) (*Request, error) {
 	sc.id++
 
 	req := NewRequest(sc.id, serviceMethod, args)
 	str, err := req.JsonRPCString()
 	if err != nil {
-		return err
+		return nil, err
 	}
 	if _, err := sc.Write([]byte(str)); err != nil {
-		return err
+		return nil, err
 	}
-	return nil
+	return req, nil
 }
 
 func (sc *StratumContext) ReadLine() (string, error) {
@@ -109,7 +105,7 @@ func (sc *StratumContext) Authorize(username, password string) error {
 	args["pass"] = password
 	args["agent"] = "go-stratum-client"
 
-	err := sc.Call("login", args)
+	_, err := sc.Call("login", args)
 	if err != nil {
 		return err
 	}
@@ -146,15 +142,33 @@ func (sc *StratumContext) Authorize(username, password string) error {
 				continue
 			}
 
-			if _, ok := msg["id"]; ok {
+			id := msg["id"]
+			switch id.(type) {
+			case uint64, float64:
 				// This is a response
 				response, err := ParseResponse([]byte(line))
 				if err != nil {
 					log.Errorf("Failed to parse response from server: %v", err)
 				} else {
+					_ = response
+					id := uint64(response.MessageID.(float64))
+					if sc.submittedWorkRequestIds.Has(id) {
+						// This is a response from the server signalling that our work has been accepted
+						sc.submittedWorkRequestIds.Remove(id)
+						sc.numAcceptedResults++
+						sc.numSubmittedResults++
+						log.Infof("accepted %d/%d", sc.numAcceptedResults, sc.numSubmittedResults)
+					} else {
+						status := response.Result["status"].(string)
+						if strings.Compare(status, "OK") == 0 {
+							log.Errorf("Failed to properly mark submitted work as accepted. work ID: %v", response.MessageID)
+							log.Errorf("Works: %v", sc.submittedWorkRequestIds.List())
+						}
+					}
 					sc.NotifyResponse(response)
 				}
-			} else {
+			default:
+				// this is a notification
 				log.Debugf("Received message from stratum server: %v", msg)
 				switch msg["method"].(string) {
 				case "job":
@@ -165,6 +179,7 @@ func (sc *StratumContext) Authorize(username, password string) error {
 						sc.NotifyNewWork(work)
 					}
 				default:
+					log.Errorf("Unknown method: %v", msg["method"])
 				}
 			}
 		}
@@ -176,7 +191,7 @@ func (sc *StratumContext) Authorize(username, password string) error {
 			time.Sleep(sc.KeepAliveDuration)
 			args := make(map[string]interface{})
 			args["id"] = sc.SessionID
-			if err := sc.Call("keepalive", args); err != nil {
+			if _, err := sc.Call("keepalived", args); err != nil {
 				log.Errorf("Failed keepalive: %v", err)
 			} else {
 				// log.Debugf("Posted keepalive")
@@ -189,8 +204,8 @@ func (sc *StratumContext) Authorize(username, password string) error {
 
 func (sc *StratumContext) SubmitWork(work *Work, hash string) error {
 	if work == sc.LastSubmittedWork {
-		log.Warnf("Prevented submission of stale work")
-		return nil
+		// log.Warnf("Prevented submission of stale work")
+		// return nil
 	}
 	args := make(map[string]interface{})
 	nonceStr, err := BinToHex(work.Data[39:43])
@@ -201,9 +216,10 @@ func (sc *StratumContext) SubmitWork(work *Work, hash string) error {
 	args["job_id"] = work.JobID
 	args["nonce"] = nonceStr
 	args["result"] = hash
-	if err := sc.Call("submit", args); err != nil {
+	if req, err := sc.Call("submit", args); err != nil {
 		return err
 	} else {
+		sc.submittedWorkRequestIds.Add(uint64(req.MessageID.(int)))
 		// Successfully submitted result
 		log.Debugf("Successfully submitted work result")
 		args["work"] = work
@@ -231,7 +247,8 @@ func (sc *StratumContext) RegisterResponseListener(rChan chan *Response) {
 func (sc *StratumContext) GetJob() error {
 	args := make(map[string]interface{})
 	args["id"] = sc.SessionID
-	return sc.Call("getjob", args)
+	_, err := sc.Call("getjob", args)
+	return err
 }
 
 func ParseResponse(b []byte) (*Response, error) {
