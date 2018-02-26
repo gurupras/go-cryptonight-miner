@@ -3,6 +3,7 @@ package stratum
 import (
 	"encoding/binary"
 	"fmt"
+	"math"
 	"unsafe"
 
 	log "github.com/sirupsen/logrus"
@@ -10,32 +11,23 @@ import (
 
 type Work struct {
 	Data       WorkData
-	Target     []uint32 `json:"target"`
-	JobID      string   `json:"job_id"`
+	Target     uint64 `json:"target"`
+	JobID      string `json:"job_id"`
 	NoncePtr   *uint32
 	Difficulty float64 `json:"difficulty"`
 	XNonce2    string
+	Size       int
 }
 
 func NewWork() *Work {
 	work := &Work{}
-	work.Data = make([]byte, 128)
-	work.Target = make([]uint32, 8)
+	work.Data = make([]byte, 84)
+	work.Target = 0
 	work.NoncePtr = (*uint32)(unsafe.Pointer(&work.Data[39]))
 	return work
 }
 
 type WorkData []byte
-
-func (w WorkData) AsUint32Slice() []uint32 {
-	ret := make([]uint32, 32)
-	for i := 0; i < 32; i++ {
-		val := binary.LittleEndian.Uint32(w[i*4 : i*4+4])
-		// log.Debugf("bytes: %v  val[%d]=%d", data[i*4:i*4+4], i, val)
-		ret[i] = val
-	}
-	return ret
-}
 
 func ParseWorkFromResponse(r *Response) (*Work, error) {
 	result := r.Result
@@ -64,17 +56,21 @@ func ParseWork(args map[string]interface{}) (*Work, error) {
 	}
 
 	// TODO: Should there be a lock here?
-	blob, err := HexToBin(hexBlob, blobLen/2)
+	blob, err := HexToBin(hexBlob, blobLen)
 	if err != nil {
 		return nil, err
 	}
 
+	log.Debugf("blob bytes=%v", BinToStr(blob))
+
 	targetStr := args["target"].(string)
 	log.Debugf("targetStr: %v", targetStr)
-	b, err := HexToBin(targetStr, 4)
-	target := binary.LittleEndian.Uint32(b)
-	log.Debugf("target: %v", target)
-	difficulty := float64(0xffffffff) / float64(target)
+	b, err := HexToBin(targetStr, 8)
+	target := uint64(binary.LittleEndian.Uint32(b))
+	target64 := math.MaxUint64 / (uint64(0xFFFFFFFF) / target)
+	target = target64
+	log.Debugf("target: %X", target)
+	difficulty := float64(0xFFFFFFFFFFFFFFFF) / float64(target64)
 	log.Infof("Pool set difficulty: %.2f", difficulty)
 
 	work := NewWork()
@@ -85,13 +81,9 @@ func ParseWork(args map[string]interface{}) (*Work, error) {
 		work.Data[i] = '\x00'
 	}
 
-	for i := 0; i < len(work.Target); i++ {
-		work.Target[i] = 0xff
-	}
-
+	work.Size = blobLen / 2
 	work.JobID = jobId
-	work.Target[7] = target
+	work.Target = target
 	work.Difficulty = difficulty
 	return work, nil
-
 }

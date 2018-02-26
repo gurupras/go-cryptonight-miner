@@ -9,26 +9,34 @@
 #include <sys/types.h>
 #elif defined _WIN32
 #include <windows.h>
+#include "mem_win.h"
 #endif
 
-void *xmrig_setup_persistent_ctx() {
-  struct cryptonight_ctx *persistentctx = NULL;
-	#if defined __unix__ && (!defined __APPLE__) && (!defined DISABLE_LINUX_HUGEPAGES)
-	persistentctx = (struct cryptonight_ctx *)mmap(0, sizeof(struct cryptonight_ctx), PROT_READ | PROT_WRITE, MAP_PRIVATE | MAP_ANONYMOUS | MAP_HUGETLB | MAP_POPULATE, 0, 0);
-	if(persistentctx == MAP_FAILED) persistentctx = (struct cryptonight_ctx *)malloc(sizeof(struct cryptonight_ctx));
-	madvise(persistentctx, sizeof(struct cryptonight_ctx), MADV_RANDOM | MADV_WILLNEED | MADV_HUGEPAGE);
-	if(!geteuid()) mlock(persistentctx, sizeof(struct cryptonight_ctx));
-	#elif defined _WIN32
-  printf("%s: _WIN32", __func__);
-	persistentctx = VirtualAlloc(NULL, sizeof(struct cryptonight_ctx), MEM_COMMIT | MEM_RESERVE | MEM_LARGE_PAGES, PAGE_READWRITE);
-	if(!persistentctx) {
-    printf("Failed to call VirtualAlloc()");
-    persistentctx = (struct cryptonight_ctx *)malloc(sizeof(struct cryptonight_ctx));
+#include <stdio.h>
+
+void *xmrig_setup_hugepages(int nthreads)
+{
+  void *ret;
+  int size = MEMORY * (nthreads * 1 + 1);
+#if defined _WIN32
+  TrySetLockPagesPrivilege();
+  ret = VirtualAlloc(NULL, size, MEM_COMMIT | MEM_RESERVE | MEM_LARGE_PAGES, PAGE_READWRITE);
+  if(!ret) {
+    printf("Failed to call VirtualAlloc()\n");
+    ret = _mm_malloc(size, 16);
   }
-	#else
-	persistentctx = (struct cryptonight_ctx *)malloc(sizeof(struct cryptonight_ctx));
-	#endif
-  return persistentctx;
+#endif
+  return ret;
+}
+
+void *xmrig_thread_persistent_ctx(void *memptr, int thread_id) {
+  uint8_t *mem = (uint8_t *)memptr;
+  struct cryptonight_ctx *persistent_ctx;
+#if defined _WIN32
+  persistent_ctx = (void *) &mem[MEMORY - sizeof(struct cryptonight_ctx) * (thread_id + 1)];
+  persistent_ctx->memory = (void *) &mem[MEMORY * (thread_id * 1 + 1)];
+#endif
+  return persistent_ctx;
 }
 
 int xmrig_cryptonight_hash_wrapper(const void *input, int size, const void *output, const  void *target, void *ctx)

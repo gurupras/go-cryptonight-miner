@@ -19,7 +19,7 @@ func main() {
 	go func() {
 		for clientRequest := range server.RequestChan {
 			if strings.Compare(clientRequest.Request.RemoteMethod, "login") == 0 || strings.Compare(clientRequest.Request.RemoteMethod, "submit") == 0 {
-				if _, err := clientRequest.Conn.Write([]byte(stratum.TEST_JOB_STR)); err != nil {
+				if _, err := clientRequest.Conn.Write([]byte(stratum.TEST_JOB_STR_5)); err != nil {
 					log.Errorf("Failed to send client test job: %v", err)
 				}
 			}

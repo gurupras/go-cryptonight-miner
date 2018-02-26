@@ -62,9 +62,9 @@ func main() {
 	}()
 
 	numMiners := *threads
-	miners := make([]*cpuminer.CPUMiner, numMiners)
+	miners := make([]cpuminer.Interface, numMiners)
 	for i := 0; i < numMiners; i++ {
-		miner := cpuminer.New(sc)
+		miner := cpuminer.NewXMRigCPUMiner(sc)
 		miner.RegisterHashrateListener(hashrateChan)
 		miners[i] = miner
 	}
@@ -73,9 +73,9 @@ func main() {
 		go miners[i].Run()
 	}
 
-	responseChan := make(chan *stratum.Response)
-
-	sc.RegisterResponseListener(responseChan)
+	// responseChan := make(chan *stratum.Response)
+	//
+	// sc.RegisterResponseListener(responseChan)
 
 	if err := sc.Connect(*url); err != nil {
 		log.Fatalf("Failed to connect to url :%v  - %v", *url, err)
@@ -85,5 +85,5 @@ func main() {
 		log.Fatalf("Failed to authorize with server: %v", err)
 	}
 
-	time.Sleep(600 * time.Second)
+	time.Sleep(300 * time.Second)
 }

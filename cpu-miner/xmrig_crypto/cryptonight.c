@@ -108,7 +108,10 @@ bool xmrig_cryptonight_hash(const void *input, int size, const void *output, con
     cryptonight_hash_ctx(input, size, output, ctx);
 
     // TODO: Check this
-    return (*(uint64_t *)(output + 24)) < (*(uint64_t *) target);
+    uint64_t res = (*(uint64_t *)(output + 24));
+    uint64_t tgt = (*(uint64_t *) target);
+    // printf("res=%llX tgt=%llX\n", res, tgt);
+    return res < tgt;
 }
 
 

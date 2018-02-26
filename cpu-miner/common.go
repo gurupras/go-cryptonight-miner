@@ -66,7 +66,9 @@ func (m *CPUMiner) InformHashrate(hashes uint32, timeTaken time.Duration) {
 
 func workCopy(dest *stratum.Work, src *stratum.Work) {
 	copy(dest.Data, src.Data)
-	copy(dest.Target, src.Target)
+	dest.Size = src.Size
+	dest.Difficulty = src.Difficulty
+	dest.Target = src.Target
 	if strings.Compare(src.JobID, "") != 0 {
 		dest.JobID = src.JobID
 	}
