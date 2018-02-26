@@ -40,9 +40,6 @@ func main() {
 
 	sc := stratum.New()
 
-	wg := sync.WaitGroup{}
-	wg.Add(1)
-
 	hashrateChan := make(chan *cpuminer.HashRate)
 	go func() {
 		duration := 10 * time.Second
@@ -69,6 +66,8 @@ func main() {
 		miners[i] = miner
 	}
 
+	wg := sync.WaitGroup{}
+	wg.Add(1)
 	for i := 0; i < numMiners; i++ {
 		go miners[i].Run()
 	}
@@ -85,5 +84,9 @@ func main() {
 		log.Fatalf("Failed to authorize with server: %v", err)
 	}
 
-	time.Sleep(300 * time.Second)
+	if *cpuprofile != "" {
+		time.Sleep(300 * time.Second)
+	} else {
+		wg.Wait() // blocks forever
+	}
 }
