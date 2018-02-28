@@ -9,6 +9,7 @@ import (
 	"time"
 
 	stratum "github.com/gurupras/go-stratum-client"
+	"github.com/gurupras/go-stratum-client/miner"
 	log "github.com/sirupsen/logrus"
 	"github.com/stretchr/testify/require"
 	yaml "gopkg.in/yaml.v2"
@@ -44,7 +45,7 @@ func testCPUMiner(t *testing.T, numMiners int, constructor constructor) {
 		}
 	}()
 
-	miners := make([]Interface, numMiners)
+	miners := make([]miner.Interface, numMiners)
 	for i := 0; i < numMiners; i++ {
 		miner := constructor(sc)
 		miner.RegisterHashrateListener(hashrateChan)

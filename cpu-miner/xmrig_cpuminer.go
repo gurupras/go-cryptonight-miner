@@ -7,6 +7,7 @@ import (
 
 	stratum "github.com/gurupras/go-stratum-client"
 	"github.com/gurupras/go-stratum-client/cpu-miner/xmrig_crypto"
+	"github.com/gurupras/go-stratum-client/miner"
 	log "github.com/sirupsen/logrus"
 )
 
@@ -17,7 +18,7 @@ type XMRigCPUMiner struct {
 	*CPUMiner
 }
 
-func NewXMRigCPUMiner(sc *stratum.StratumContext) Interface {
+func NewXMRigCPUMiner(sc *stratum.StratumContext) miner.Interface {
 	miner := New(sc)
 	return &XMRigCPUMiner{
 		miner,
@@ -25,7 +26,7 @@ func NewXMRigCPUMiner(sc *stratum.StratumContext) Interface {
 }
 
 func (m *XMRigCPUMiner) Run() error {
-	defaultNonce := 0xffffffff / int(TotalMiners) * (int(m.id))
+	defaultNonce := 0xffffffff / int(TotalMiners) * (int(m.Id()))
 	workLock := sync.Mutex{}
 	work := xmrig_crypto.NewXMRigWork()
 	var newWork *stratum.Work

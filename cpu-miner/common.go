@@ -3,11 +3,10 @@ package cpuminer
 import (
 	"strings"
 	"sync/atomic"
-	"time"
 	"unsafe"
 
-	"github.com/fatih/set"
 	stratum "github.com/gurupras/go-stratum-client"
+	"github.com/gurupras/go-stratum-client/miner"
 )
 
 var (
@@ -15,53 +14,21 @@ var (
 	minerId     uint32 = 0
 )
 
-type HashRate struct {
-	Hashes    uint32
-	TimeTaken time.Duration
-}
-
 type CPUMiner struct {
 	*stratum.StratumContext
+	*miner.Miner
 	CryptonightContext unsafe.Pointer
-	id                 uint32
-	hashrateListeners  set.Interface
-}
-
-type Interface interface {
-	Id() uint32
-	Run() error
-	RegisterHashrateListener(chan *HashRate)
 }
 
 func New(sc *stratum.StratumContext) *CPUMiner {
 	miner := &CPUMiner{
 		sc,
+		miner.New(minerId),
 		nil,
-		minerId,
-		set.New(),
 	}
 	atomic.AddUint32(&minerId, 1)
 	atomic.AddUint32(&TotalMiners, 1)
 	return miner
-}
-
-func (m *CPUMiner) Id() uint32 {
-	return m.id
-}
-
-func (m *CPUMiner) RegisterHashrateListener(hrChan chan *HashRate) {
-	m.hashrateListeners.Add(hrChan)
-}
-
-func (m *CPUMiner) InformHashrate(hashes uint32, timeTaken time.Duration) {
-	data := &HashRate{
-		hashes,
-		timeTaken,
-	}
-	for _, obj := range m.hashrateListeners.List() {
-		hrChan := obj.(chan *HashRate)
-		hrChan <- data
-	}
 }
 
 func workCopy(dest *stratum.Work, src *stratum.Work) {

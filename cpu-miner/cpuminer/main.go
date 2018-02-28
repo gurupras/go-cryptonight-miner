@@ -11,6 +11,7 @@ import (
 	"github.com/alecthomas/kingpin"
 	stratum "github.com/gurupras/go-stratum-client"
 	cpuminer "github.com/gurupras/go-stratum-client/cpu-miner"
+	"github.com/gurupras/go-stratum-client/miner"
 	log "github.com/sirupsen/logrus"
 )
 
@@ -40,7 +41,7 @@ func main() {
 
 	sc := stratum.New()
 
-	hashrateChan := make(chan *cpuminer.HashRate)
+	hashrateChan := make(chan *miner.HashRate)
 	go func() {
 		duration := 10 * time.Second
 		totalHashes := uint32(0)
@@ -59,7 +60,7 @@ func main() {
 	}()
 
 	numMiners := *threads
-	miners := make([]cpuminer.Interface, numMiners)
+	miners := make([]miner.Interface, numMiners)
 	for i := 0; i < numMiners; i++ {
 		miner := cpuminer.NewXMRigCPUMiner(sc)
 		miner.RegisterHashrateListener(hashrateChan)
