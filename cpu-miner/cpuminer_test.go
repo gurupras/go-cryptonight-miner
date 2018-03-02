@@ -17,7 +17,7 @@ import (
 
 var testConfig map[string]interface{}
 
-type constructor func(sc *stratum.StratumContext) Interface
+type constructor func(sc *stratum.StratumContext) miner.Interface
 
 func testCPUMiner(t *testing.T, numMiners int, constructor constructor) {
 	require := require.New(t)
@@ -27,7 +27,7 @@ func testCPUMiner(t *testing.T, numMiners int, constructor constructor) {
 	wg := sync.WaitGroup{}
 	wg.Add(1)
 
-	hashrateChan := make(chan *HashRate)
+	hashrateChan := make(chan *miner.HashRate)
 	go func() {
 		duration := 10 * time.Second
 		totalHashes := uint32(0)
@@ -57,13 +57,13 @@ func testCPUMiner(t *testing.T, numMiners int, constructor constructor) {
 	}
 
 	responseChan := make(chan *stratum.Response)
-	validShares := 10
+	validShares := 3
 	go func() {
 		for response := range responseChan {
 			if strings.Compare(response.Result["status"].(string), "OK") == 0 {
 				validShares--
 				if validShares == 0 {
-					log.Infof("Valid shares requirement met. Terminating test")
+					log.Debugf("Valid shares requirement met. Terminating test")
 					wg.Done()
 				}
 			}

@@ -12,3 +12,11 @@ func TestSelf(t *testing.T) {
 	err := SelfTest()
 	require.Nil(err)
 }
+
+func TestSetupSimpleCryptonightContext(t *testing.T) {
+	require := require.New(t)
+
+	ptr, err := SetupSimpleCryptonightContext()
+	require.Nil(err)
+	require.NotNil(ptr)
+}

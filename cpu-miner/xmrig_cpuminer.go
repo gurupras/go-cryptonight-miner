@@ -75,7 +75,7 @@ func (m *XMRigCPUMiner) Run() error {
 		}
 		//log.Debugf("Thread-%d: Got new work - %s", m.id, newWork.JobID)
 		//log.Debugf("Thread-%d: blob: %v", stratum.BinToStr(newWork.Data))
-		workCopy(work.Work, newWork)
+		WorkCopy(work.Work, newWork)
 		work.UpdateCData()
 		*noncePtr = uint32(defaultNonce)
 	}

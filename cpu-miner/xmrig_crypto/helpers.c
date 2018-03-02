@@ -39,6 +39,11 @@ void *xmrig_thread_persistent_ctx(void *memptr, int thread_id) {
   return persistent_ctx;
 }
 
+void *xmrig_simple_cryptonight_context()
+{
+  return _mm_malloc(sizeof(struct cryptonight_ctx), 16);
+}
+
 int xmrig_cryptonight_hash_wrapper(const void *input, int size, const void *output, const  void *target, void *ctx)
 {
   return xmrig_cryptonight_hash(input, size, output, target, (struct cryptonight_ctx *) ctx);

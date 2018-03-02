@@ -31,7 +31,7 @@ func New(sc *stratum.StratumContext) *CPUMiner {
 	return miner
 }
 
-func workCopy(dest *stratum.Work, src *stratum.Work) {
+func WorkCopy(dest *stratum.Work, src *stratum.Work) {
 	copy(dest.Data, src.Data)
 	dest.Size = src.Size
 	dest.Difficulty = src.Difficulty

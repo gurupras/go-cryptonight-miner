@@ -11,7 +11,8 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func TestXMRigCPUMiner(t *testing.T) {
+func TestWithExternalPool(t *testing.T) {
+	t.Skip("Skipping external pool test")
 	testCPUMiner(t, 4, NewXMRigCPUMiner)
 }
 
@@ -27,6 +28,7 @@ func TestXMRigSolver(t *testing.T) {
 
 	go func() {
 		for clientRequest := range server.RequestChan {
+			log.Debugf("server: Received message: %v", clientRequest.Request)
 			if strings.Compare(clientRequest.Request.RemoteMethod, "login") == 0 {
 				if _, err := clientRequest.Conn.Write([]byte(stratum.TEST_JOB_STR_5)); err != nil {
 					log.Errorf("Failed to send client test job: %v", err)
@@ -38,7 +40,6 @@ func TestXMRigSolver(t *testing.T) {
 				defer server.StoppableNetListener.Stop()
 				wg.Done()
 			}
-			log.Debugf("Received message: %v", clientRequest.Request)
 		}
 	}()
 

@@ -70,6 +70,15 @@ func SetupCryptonightContext(memPtr unsafe.Pointer, threadId uint32) (unsafe.Poi
 	}
 }
 
+func SetupSimpleCryptonightContext() (unsafe.Pointer, error) {
+	ptr := C.xmrig_simple_cryptonight_context()
+	if ptr != nil {
+		return ptr, nil
+	} else {
+		return nil, fmt.Errorf("malloc cryptonight_ctx failed")
+	}
+}
+
 func CryptonightHash(work *XMRigWork, ctx unsafe.Pointer) ([]byte, bool) {
 	target := work.Work.Target
 	targetPtr := unsafe.Pointer(&target)
