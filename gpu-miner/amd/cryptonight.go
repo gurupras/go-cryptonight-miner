@@ -1,0 +1,11 @@
+package amdgpu
+
+const (
+	AEON_MEMORY = uint64(1048576)
+	AEON_MASK   = 0xFFFF0
+	AEON_ITER   = 0x40000
+
+	MONERO_MEMORY = uint64(2097152)
+	MONERO_MASK   = 0x1FFFF0
+	MONERO_ITER   = 0x80000
+)
