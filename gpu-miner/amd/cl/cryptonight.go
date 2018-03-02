@@ -1,6 +1,6 @@
 package amdgpu_cl
 
-const Cryptonight_CL_STR = `===(
+const Cryptonight_CL_STR = `
 /*
   * This program is free software: you can redistribute it and/or modify
   * it under the terms of the GNU General Public License as published by
@@ -237,8 +237,7 @@ void keccakf1600_1(ulong *st)
         st[0] ^= keccakf_rndc[round];
     }
 }
-)===
-===(
+
 void keccakf1600_2(ulong *st)
 {
     int i, round;
@@ -366,9 +365,6 @@ void keccakf1600_2(ulong *st)
         st[0] ^= keccakf_rndc[round];
     }
 }
-
-)==="
-R"===(
 
 void CNKeccak(ulong *output, ulong *input)
 {
@@ -658,9 +654,6 @@ __kernel void cn2(__global uint4 *Scratchpad, __global ulong *states, __global u
 	mem_fence(CLK_GLOBAL_MEM_FENCE);
 }
 
-)==="
-R"===(
-
 #define VSWAP8(x)	(((x) >> 56) | (((x) >> 40) & 0x000000000000FF00UL) | (((x) >> 24) & 0x0000000000FF0000UL) \
           | (((x) >>  8) & 0x00000000FF000000UL) | (((x) <<  8) & 0x000000FF00000000UL) \
           | (((x) << 24) & 0x0000FF0000000000UL) | (((x) << 40) & 0x00FF000000000000UL) | (((x) << 56) & 0xFF00000000000000UL))
@@ -936,4 +929,4 @@ __kernel void Groestl(__global ulong *states, __global uint *BranchBuf, __global
 		}
 	}
 }
-)===`
+`

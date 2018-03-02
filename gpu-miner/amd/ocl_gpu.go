@@ -254,8 +254,8 @@ func printPlatforms() {
 }
 
 func setKernelArgFromExtraBuffers(ctx *GPUContext, kernel int, argument cl.CL_uint, offset int) bool {
-	var dummy cl.CL_mem
-	if ret := cl.CLSetKernelArg(ctx.Kernels[kernel], argument, cl.CL_size_t(unsafe.Sizeof(dummy)), unsafe.Pointer(&ctx.ExtraBuffers[offset])); ret != cl.CL_SUCCESS {
+	buf := ctx.ExtraBuffers[offset]
+	if ret := cl.CLSetKernelArg(ctx.Kernels[kernel], argument, clMemSize(), unsafe.Pointer(&buf)); ret != cl.CL_SUCCESS {
 		return false
 	}
 	return true
@@ -497,20 +497,20 @@ func XMRSetWork(ctx *GPUContext, input []byte, workSize int, target uint64) erro
 		return fmt.Errorf("Work size too long?")
 	}
 
+	log.Debugf("input length: %d", len(input))
 	input[workSize] = 0x01
 	for i := workSize + 1; i < (workSize+1)+(88-workSize-1); i++ {
 		input[i] = 0
 	}
 
 	numThreads := ctx.RawIntensity
-
+	ibuf := ctx.InputBuffer
 	inputPtr := unsafe.Pointer(&input[0])
 	if ret = cl.CLEnqueueWriteBuffer(ctx.CommandQueues, ctx.InputBuffer, cl.CL_TRUE, 0, 88, inputPtr, 0, nil, nil); ret != cl.CL_SUCCESS {
 		return fmt.Errorf("Error when calling clEnqueueWriteBuffer to fill input buffer: %v", err_to_str(ret))
 	}
 
-	inputBufferPtr := unsafe.Pointer(&ctx.InputBuffer)
-	if ret = cl.CLSetKernelArg(ctx.Kernels[0], 0, clMemSize(), inputBufferPtr); ret != cl.CL_SUCCESS {
+	if ret = cl.CLSetKernelArg(ctx.Kernels[0], 0, clMemSize(), unsafe.Pointer(&ibuf)); ret != cl.CL_SUCCESS {
 		return fmt.Errorf(setKernelArgError, err_to_str(ret), 0, 0)
 	}
 
@@ -560,7 +560,8 @@ func XMRSetWork(ctx *GPUContext, input []byte, workSize int, target uint64) erro
 		}
 
 		// Output
-		if ret = cl.CLSetKernelArg(ctx.Kernels[i+3], 2, clMemSize(), unsafe.Pointer(&ctx.OutputBuffer)); ret != cl.CL_SUCCESS {
+		obuf := ctx.OutputBuffer
+		if ret = cl.CLSetKernelArg(ctx.Kernels[i+3], 2, clMemSize(), unsafe.Pointer(&obuf)); ret != cl.CL_SUCCESS {
 			return fmt.Errorf(setKernelArgError, err_to_str(ret), i+3, 2)
 		}
 

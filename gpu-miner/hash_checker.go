@@ -17,7 +17,11 @@ var (
 )
 
 func RunHashChecker() {
-	ctx, err := xmrig_crypto.SetupSimpleCryptonightContext()
+	globalMem, err := xmrig_crypto.SetupHugePages(1)
+	if err != nil {
+		log.Fatalf("Failed to initialize hugepages: %v", err)
+	}
+	ctx, err := xmrig_crypto.SetupCryptonightContext(globalMem, 0)
 	if err != nil {
 		log.Fatalf("Failed to intialize context: %v", err)
 	}

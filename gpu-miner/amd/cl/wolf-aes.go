@@ -1,6 +1,6 @@
 package amdgpu_cl
 
-const WolfAES_CL_STR = `===(
+const WolfAES_CL_STR = `
 #ifndef WOLF_AES_CL
 #define WOLF_AES_CL
 
@@ -89,4 +89,4 @@ uint4 AES_Round(const __local uint *AES0, const __local uint *AES1, const __loca
 
 #endif
 
-)===`
+`

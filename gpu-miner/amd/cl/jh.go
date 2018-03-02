@@ -1,6 +1,6 @@
 package amdgpu_cl
 
-const JH_CL_STR = `===(
+const JH_CL_STR = `
 /* $Id: jh.c 255 2011-06-07 19:50:20Z tp $ */
 /*
  * JH implementation.
@@ -273,4 +273,4 @@ static const __constant ulong C[] =
 
 #endif
 
-)===`
+`

@@ -133,6 +133,8 @@ func main() {
 		log.Fatalf("Failed to initialize OpenCL: %v", err)
 	}
 
+	go gpuminer.RunHashChecker()
+
 	wg := sync.WaitGroup{}
 	wg.Add(1)
 	for i := 0; i < numMiners; i++ {

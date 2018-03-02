@@ -1,6 +1,6 @@
 package amdgpu_cl
 
-const Skein_CL_STR = `===(
+const Skein_CL_STR = `
 
 #ifndef WOLF_SKEIN_CL
 #define WOLF_SKEIN_CL
@@ -114,4 +114,4 @@ ulong8 Skein512Block(ulong8 p, ulong8 h, ulong h8, const ulong *t)
 
 #endif
 
-)===`
+`

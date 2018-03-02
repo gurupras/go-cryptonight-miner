@@ -13,8 +13,8 @@ import (
 	"github.com/gurupras/go-stratum-client/cpu-miner/xmrig_crypto"
 	amdgpu "github.com/gurupras/go-stratum-client/gpu-miner/amd"
 	"github.com/gurupras/go-stratum-client/miner"
-	"github.com/prometheus/common/log"
 	"github.com/rainliu/gocl/cl"
+	log "github.com/sirupsen/logrus"
 )
 
 var (
@@ -121,10 +121,20 @@ func (m *GPUMiner) Run() error {
 	log.Debugf("Got first job")
 	consumeWork()
 
+	callCount := 0
+	callCountTime := time.Now()
+	var (
+		runWorkDuration time.Duration
+		tempTime        time.Time
+	)
+
+	// Main loop
 	for {
 		results.Zero()
 
+		tempTime = time.Now()
 		amdgpu.XMRRunWork(m.Context, results)
+		runWorkDuration = time.Now().Sub(tempTime)
 
 		for i := 0; i < int(results[0xFF]); i++ {
 			*noncePtr = uint32(results[i])
@@ -134,9 +144,17 @@ func (m *GPUMiner) Run() error {
 		endTime = time.Now()
 		diff := endTime.Sub(startTime)
 		startTime = endTime
+
+		if endTime.Sub(callCountTime) > 10*time.Second {
+			log.Infof("calls=%d", callCount)
+			callCount = 0
+			callCountTime = endTime
+		}
 		m.InformHashrate(uint32(m.Context.RawIntensity), diff)
 
 		consumeWork()
+		log.Debugf("XMRRunWork=%.2f", runWorkDuration.Seconds())
+		callCount++
 	}
 }
 

@@ -21,7 +21,7 @@ type Work struct {
 
 func NewWork() *Work {
 	work := &Work{}
-	work.Data = make([]byte, 84)
+	work.Data = make([]byte, 96)
 	work.Target = 0
 	work.NoncePtr = (*uint32)(unsafe.Pointer(&work.Data[39]))
 	return work

@@ -1,6 +1,6 @@
 package amdgpu_cl
 
-const Blake256_CL_STR = `===(
+const Blake256_CL_STR = `
 /*
 * blake256 kernel implementation.
 *
@@ -92,4 +92,4 @@ __constant static const sph_u32  c_u256[16] = {
     v[b] ^= v[c]; \
 	v[b] = rotate(v[b], 25U); \
 }
-)===`
+`
