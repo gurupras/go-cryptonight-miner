@@ -3,7 +3,6 @@ package amdgpu
 import (
 	"testing"
 
-	log "github.com/sirupsen/logrus"
 	"github.com/stretchr/testify/require"
 )
 
@@ -18,7 +17,7 @@ func TestGetAMDDevices(t *testing.T) {
 	require := require.New(t)
 
 	numPlatforms := getNumPlatforms()
-	log.Infof("numPlatforms=%v", numPlatforms)
+	//log.Infof("numPlatforms=%v", numPlatforms)
 
 	fail := true
 	for i := int(numPlatforms) - 1; i >= 0; i-- {
@@ -31,5 +30,6 @@ func TestGetAMDDevices(t *testing.T) {
 }
 
 func TestPrintPlatforms(t *testing.T) {
+	t.Skip("Too primitive")
 	printPlatforms()
 }

@@ -3,6 +3,7 @@ package main
 import (
 	"io/ioutil"
 	"os"
+	"runtime"
 	"runtime/pprof"
 	"sync"
 	"time"
@@ -12,6 +13,7 @@ import (
 	gpuminer "github.com/gurupras/go-stratum-client/gpu-miner"
 	amdgpu "github.com/gurupras/go-stratum-client/gpu-miner/amd"
 	"github.com/gurupras/go-stratum-client/miner"
+	colorable "github.com/mattn/go-colorable"
 	log "github.com/sirupsen/logrus"
 	yaml "gopkg.in/yaml.v2"
 )
@@ -20,6 +22,7 @@ var (
 	app        = kingpin.New("cpuminer", "CPU Cryptonight miner")
 	config     = app.Flag("config-file", "YAML config file").Short('c').Required().String()
 	verbose    = app.Flag("verbose", "Enable verbose log messages").Short('v').Bool()
+	debug      = app.Flag("debug", "Enable miner debugging log messages").Short('d').Default("false").Bool()
 	cpuprofile = app.Flag("cpuprofile", "Run CPU profiler").String()
 )
 
@@ -71,6 +74,11 @@ type Pool struct {
 func main() {
 	kingpin.MustParse(app.Parse(os.Args[1:]))
 
+	if runtime.GOOS == "windows" {
+		log.SetFormatter(&log.TextFormatter{ForceColors: true})
+		log.SetOutput(colorable.NewColorableStdout())
+	}
+
 	if *verbose {
 		log.SetLevel(log.DebugLevel)
 	}
@@ -99,23 +107,8 @@ func main() {
 
 	sc := stratum.New()
 
-	hashrateChan := make(chan *miner.HashRate)
-	go func() {
-		duration := 10 * time.Second
-		totalHashes := uint32(0)
-
-		startTime := time.Now()
-		for hr := range hashrateChan {
-			now := time.Now()
-			if now.Sub(startTime) < duration {
-				totalHashes += hr.Hashes
-			} else {
-				log.Infof("Speed: %dH/s", uint32(float64(totalHashes)/(now.Sub(startTime).Seconds())))
-				totalHashes = 0
-				startTime = time.Now()
-			}
-		}
-	}()
+	hashrateChan := make(chan *miner.HashRate, 10)
+	go miner.SetupHashRateLogger(hashrateChan)
 
 	numMiners := len(config.Threads)
 	miners := make([]miner.Interface, numMiners)
@@ -127,6 +120,7 @@ func main() {
 		miner.RegisterHashrateListener(hashrateChan)
 		gpuContexts[i] = miner.Context
 		miners[i] = miner
+		miner.SetDebug(*debug)
 	}
 
 	if err := amdgpu.InitOpenCL(gpuContexts, numMiners, config.OpenCLPlatform); err != nil {

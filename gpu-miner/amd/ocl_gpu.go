@@ -1,5 +1,14 @@
 package amdgpu
 
+/*
+#cgo CFLAGS: -I CL
+#cgo !darwin LDFLAGS: -lOpenCL
+#cgo darwin LDFLAGS: -framework OpenCL
+
+#include "ocl_gpu.h"
+*/
+import "C"
+
 import (
 	"fmt"
 	"math"
@@ -13,12 +22,6 @@ import (
 )
 
 const (
-	OCL_ERR_SUCCESS    = 0
-	OCL_ERR_API        = 2
-	OCL_ERR_BAD_PARAMS = 1
-)
-
-const (
 	setKernelArgError = "Error %s when calling clSetKernelArg for kernel %d, argument %d"
 )
 
@@ -27,132 +30,8 @@ func portSleep(sec int) {
 }
 
 func err_to_str(ret cl.CL_int) string {
-	switch ret {
-	//	case cl.CL_SUCCESS:
-	//		return "CL_SUCCESS"
-	case cl.CL_DEVICE_NOT_FOUND:
-		return "CL_DEVICE_NOT_FOUND"
-	case cl.CL_DEVICE_NOT_AVAILABLE:
-		return "CL_DEVICE_NOT_AVAILABLE"
-	case cl.CL_COMPILER_NOT_AVAILABLE:
-		return "CL_COMPILER_NOT_AVAILABLE"
-	case cl.CL_MEM_OBJECT_ALLOCATION_FAILURE:
-		return "CL_MEM_OBJECT_ALLOCATION_FAILURE"
-	case cl.CL_OUT_OF_RESOURCES:
-		return "CL_OUT_OF_RESOURCES"
-	case cl.CL_OUT_OF_HOST_MEMORY:
-		return "CL_OUT_OF_HOST_MEMORY"
-	case cl.CL_PROFILING_INFO_NOT_AVAILABLE:
-		return "CL_PROFILING_INFO_NOT_AVAILABLE"
-	case cl.CL_MEM_COPY_OVERLAP:
-		return "CL_MEM_COPY_OVERLAP"
-	case cl.CL_IMAGE_FORMAT_MISMATCH:
-		return "CL_IMAGE_FORMAT_MISMATCH"
-	case cl.CL_IMAGE_FORMAT_NOT_SUPPORTED:
-		return "CL_IMAGE_FORMAT_NOT_SUPPORTED"
-	case cl.CL_BUILD_PROGRAM_FAILURE:
-		return "CL_BUILD_PROGRAM_FAILURE"
-	case cl.CL_MAP_FAILURE:
-		return "CL_MAP_FAILURE"
-	case cl.CL_MISALIGNED_SUB_BUFFER_OFFSET:
-		return "CL_MISALIGNED_SUB_BUFFER_OFFSET"
-	case cl.CL_EXEC_STATUS_ERROR_FOR_EVENTS_IN_WAIT_LIST:
-		return "CL_EXEC_STATUS_ERROR_FOR_EVENTS_IN_WAIT_LIST"
-	case cl.CL_COMPILE_PROGRAM_FAILURE:
-		return "CL_COMPILE_PROGRAM_FAILURE"
-	case cl.CL_LINKER_NOT_AVAILABLE:
-		return "CL_LINKER_NOT_AVAILABLE"
-	case cl.CL_LINK_PROGRAM_FAILURE:
-		return "CL_LINK_PROGRAM_FAILURE"
-	case cl.CL_DEVICE_PARTITION_FAILED:
-		return "CL_DEVICE_PARTITION_FAILED"
-	case cl.CL_KERNEL_ARG_INFO_NOT_AVAILABLE:
-		return "CL_KERNEL_ARG_INFO_NOT_AVAILABLE"
-	case cl.CL_INVALID_VALUE:
-		return "CL_INVALID_VALUE"
-	case cl.CL_INVALID_DEVICE_TYPE:
-		return "CL_INVALID_DEVICE_TYPE"
-	case cl.CL_INVALID_PLATFORM:
-		return "CL_INVALID_PLATFORM"
-	case cl.CL_INVALID_DEVICE:
-		return "CL_INVALID_DEVICE"
-	case cl.CL_INVALID_CONTEXT:
-		return "CL_INVALID_CONTEXT"
-	case cl.CL_INVALID_QUEUE_PROPERTIES:
-		return "CL_INVALID_QUEUE_PROPERTIES"
-	case cl.CL_INVALID_COMMAND_QUEUE:
-		return "CL_INVALID_COMMAND_QUEUE"
-	case cl.CL_INVALID_HOST_PTR:
-		return "CL_INVALID_HOST_PTR"
-	case cl.CL_INVALID_MEM_OBJECT:
-		return "CL_INVALID_MEM_OBJECT"
-	case cl.CL_INVALID_IMAGE_FORMAT_DESCRIPTOR:
-		return "CL_INVALID_IMAGE_FORMAT_DESCRIPTOR"
-	case cl.CL_INVALID_IMAGE_SIZE:
-		return "CL_INVALID_IMAGE_SIZE"
-	case cl.CL_INVALID_SAMPLER:
-		return "CL_INVALID_SAMPLER"
-	case cl.CL_INVALID_BINARY:
-		return "CL_INVALID_BINARY"
-	case cl.CL_INVALID_BUILD_OPTIONS:
-		return "CL_INVALID_BUILD_OPTIONS"
-	case cl.CL_INVALID_PROGRAM:
-		return "CL_INVALID_PROGRAM"
-	case cl.CL_INVALID_PROGRAM_EXECUTABLE:
-		return "CL_INVALID_PROGRAM_EXECUTABLE"
-	case cl.CL_INVALID_KERNEL_NAME:
-		return "CL_INVALID_KERNEL_NAME"
-	case cl.CL_INVALID_KERNEL_DEFINITION:
-		return "CL_INVALID_KERNEL_DEFINITION"
-	case cl.CL_INVALID_KERNEL:
-		return "CL_INVALID_KERNEL"
-	case cl.CL_INVALID_ARG_INDEX:
-		return "CL_INVALID_ARG_INDEX"
-	case cl.CL_INVALID_ARG_VALUE:
-		return "CL_INVALID_ARG_VALUE"
-	case cl.CL_INVALID_ARG_SIZE:
-		return "CL_INVALID_ARG_SIZE"
-	case cl.CL_INVALID_KERNEL_ARGS:
-		return "CL_INVALID_KERNEL_ARGS"
-	case cl.CL_INVALID_WORK_DIMENSION:
-		return "CL_INVALID_WORK_DIMENSION"
-	case cl.CL_INVALID_WORK_GROUP_SIZE:
-		return "CL_INVALID_WORK_GROUP_SIZE"
-	case cl.CL_INVALID_WORK_ITEM_SIZE:
-		return "CL_INVALID_WORK_ITEM_SIZE"
-	case cl.CL_INVALID_GLOBAL_OFFSET:
-		return "CL_INVALID_GLOBAL_OFFSET"
-	case cl.CL_INVALID_EVENT_WAIT_LIST:
-		return "CL_INVALID_EVENT_WAIT_LIST"
-	case cl.CL_INVALID_EVENT:
-		return "CL_INVALID_EVENT"
-	case cl.CL_INVALID_OPERATION:
-		return "CL_INVALID_OPERATION"
-	case cl.CL_INVALID_GL_OBJECT:
-		return "CL_INVALID_GL_OBJECT"
-	case cl.CL_INVALID_BUFFER_SIZE:
-		return "CL_INVALID_BUFFER_SIZE"
-	case cl.CL_INVALID_MIP_LEVEL:
-		return "CL_INVALID_MIP_LEVEL"
-	case cl.CL_INVALID_GLOBAL_WORK_SIZE:
-		return "CL_INVALID_GLOBAL_WORK_SIZE"
-	case cl.CL_INVALID_PROPERTY:
-		return "CL_INVALID_PROPERTY"
-	case cl.CL_INVALID_IMAGE_DESCRIPTOR:
-		return "CL_INVALID_IMAGE_DESCRIPTOR"
-	case cl.CL_INVALID_COMPILER_OPTIONS:
-		return "CL_INVALID_COMPILER_OPTIONS"
-	case cl.CL_INVALID_LINKER_OPTIONS:
-		return "CL_INVALID_LINKER_OPTIONS"
-	case cl.CL_INVALID_DEVICE_PARTITION_COUNT:
-		return "CL_INVALID_DEVICE_PARTITION_COUNT"
-	case cl.CL_INVALID_PIPE_SIZE:
-		return "CL_INVALID_PIPE_SIZE"
-	case cl.CL_INVALID_DEVICE_QUEUE:
-		return "CL_INVALID_DEVICE_QUEUE"
-	default:
-		return "UNKNOWN_ERROR"
-	}
+	result := C.err_to_str(C.int(ret))
+	return C.GoString(result)
 }
 
 func getDeviceMaxComputeUnits(id cl.CL_device_id) cl.CL_uint {
@@ -229,7 +108,7 @@ func getAMDDevices(index int) (contexts []*GPUContext) {
 			continue
 		}
 		ctx.Name = string(friendlyNameBytes)
-		log.Infof("OpenCL GPU: %v, cpu: %d", ctx.Name, ctx.ComputeUnits)
+		log.Debugf("OpenCL GPU: %v, cpu: %d", ctx.Name, ctx.ComputeUnits)
 		contexts = append(contexts, ctx)
 	}
 	return
@@ -303,7 +182,7 @@ func InitOpenCLGPU(index int, clCtx cl.CL_context, ctx *GPUContext, code [][]byt
 		return fmt.Errorf("Error when calling clCreateBuffer for scratchpads buffer: %v", err_to_str(ret))
 	}
 
-	ctx.ExtraBuffers[1] = cl.CLCreateBuffer(clCtx, cl.CL_MEM_READ_WRITE, cl.CL_size_t(200*g_thd), nil, &ret)
+	ctx.ExtraBuffers[1] = cl.CLCreateBuffer(clCtx, cl.CL_MEM_READ_WRITE, cl.CL_size_t(100*g_thd), nil, &ret)
 	if ret != cl.CL_SUCCESS {
 		return fmt.Errorf("Error when calling clCreateBuffer for hash states buffer: %v", err_to_str(ret))
 	}
@@ -595,6 +474,18 @@ func clGetSize(v interface{}) cl.CL_size_t {
 	return clSizeWrap(unsafe.Sizeof(v))
 }
 
+func RunWork(ctx *GPUContext, hashResults []cl.CL_int) error {
+	cs := ctx.AsCStruct()
+	ctxPtr := unsafe.Pointer(cs)
+	resultsPtr := unsafe.Pointer(&hashResults[0])
+	if ret := C.XMRRunWork(ctxPtr, resultsPtr); ret != 0 {
+		return fmt.Errorf("Failed to run work")
+	}
+	// We need to move Nonce since nonce is moved in the C-version
+	ctx.Nonce = uint32(cs.Nonce)
+	return nil
+}
+
 func XMRRunWork(ctx *GPUContext, hashResults []cl.CL_int) error {
 	var (
 		ret  cl.CL_int
@@ -695,5 +586,19 @@ func XMRRunWork(ctx *GPUContext, hashResults []cl.CL_int) error {
 	}
 
 	ctx.Nonce += uint32(gIntensity)
+	return nil
+}
+
+func testCContext(ctx *GPUContext) error {
+	cs := ctx.AsCStruct()
+	ptr := unsafe.Pointer(cs)
+	cu := 0
+	if ret := C.testCContext(ptr, unsafe.Pointer(&cu)); ret != C.CL_SUCCESS {
+		return fmt.Errorf("Failed to properly issue command on C context: %v", ret)
+	} else {
+		if cu != int(ctx.ComputeUnits) {
+			return fmt.Errorf("Compute units did not match: go=%d c=%d", ctx.ComputeUnits, cu)
+		}
+	}
 	return nil
 }

@@ -3,6 +3,7 @@ package gpuminer
 import (
 	"bytes"
 	"encoding/binary"
+	"strings"
 	"sync"
 	"sync/atomic"
 	"time"
@@ -29,6 +30,7 @@ type GPUMiner struct {
 	Index     int
 	Intensity int
 	WorkSize  int
+	debug     bool
 }
 
 func NewGPUMiner(sc *stratum.StratumContext, index, intensity, worksize int) *GPUMiner {
@@ -39,10 +41,15 @@ func NewGPUMiner(sc *stratum.StratumContext, index, intensity, worksize int) *GP
 		index,
 		intensity,
 		worksize,
+		false,
 	}
 	atomic.AddUint32(&TotalMiners, 1)
 	atomic.AddUint32(&minerId, 1)
 	return miner
+}
+
+func (m *GPUMiner) SetDebug(val bool) {
+	m.debug = val
 }
 
 type CLResult []cl.CL_int
@@ -62,7 +69,7 @@ func (clr CLResult) Bytes() []byte {
 
 func (clr CLResult) Zero() {
 	for i := 0; i < len(clr); i++ {
-		clr[i] = 0x0
+		clr[i] = 0
 	}
 }
 
@@ -73,6 +80,7 @@ func (m *GPUMiner) Run() error {
 	workLock := sync.Mutex{}
 	work := xmrig_crypto.NewXMRigWork()
 	var newWork *stratum.Work
+	noncePtr := work.NoncePtr
 
 	workChan := make(chan *stratum.Work, 0)
 
@@ -81,26 +89,10 @@ func (m *GPUMiner) Run() error {
 	gotFirstJob := false
 
 	m.StratumContext.RegisterWorkListener(workChan)
-	go func() {
-		for work := range workChan {
-			workLock.Lock()
-			newWork = work
-			if !gotFirstJob {
-				gotFirstJob = true
-				initialWg.Done()
-			}
-			workLock.Unlock()
-			log.Debugf("miner-new-work: Updated work - %s", newWork.JobID)
-			log.Debugf("miner-new-work: target=%X", newWork.Target)
-		}
-	}()
 
-	noncePtr := work.NoncePtr
-
+	// Call with workLock acquired
 	consumeWork := func() {
-		workLock.Lock()
-		defer workLock.Unlock()
-		if newWork == nil || newWork.JobID == work.JobID {
+		if newWork == nil || strings.Compare(newWork.JobID, work.JobID) == 0 {
 			return
 		}
 		//log.Debugf("Thread-%d: Got new work - %s", m.id, newWork.JobID)
@@ -111,50 +103,60 @@ func (m *GPUMiner) Run() error {
 		amdgpu.XMRSetWork(m.Context, work.Data, work.Size, work.Target)
 	}
 
-	var (
-		startTime time.Time
-		endTime   time.Time
-	)
-	startTime = time.Now()
+	go func() {
+		for work := range workChan {
+			workLock.Lock()
+			newWork = work
+			consumeWork()
+			if !gotFirstJob {
+				gotFirstJob = true
+				initialWg.Done()
+			}
+			workLock.Unlock()
+			log.Debugf("miner-new-work: Updated work - %s", newWork.JobID)
+			log.Debugf("miner-new-work: target=%X", newWork.Target)
+		}
+	}()
 
 	initialWg.Wait()
 	log.Debugf("Got first job")
-	consumeWork()
 
 	callCount := 0
 	callCountTime := time.Now()
 	var (
-		runWorkDuration time.Duration
+		runWorkDuration int64
 		tempTime        time.Time
 	)
 
 	// Main loop
 	for {
+		curWork := work
 		results.Zero()
 
-		tempTime = time.Now()
-		amdgpu.XMRRunWork(m.Context, results)
-		runWorkDuration = time.Now().Sub(tempTime)
+		if m.debug {
+			tempTime = time.Now()
+			amdgpu.XMRRunWork(m.Context, results)
+			// amdgpu.RunWork(m.Context, results)
+			runWorkDuration += time.Now().Sub(tempTime).Nanoseconds()
+			callCount++
+		} else {
+			amdgpu.XMRRunWork(m.Context, results)
+		}
 
 		for i := 0; i < int(results[0xFF]); i++ {
 			*noncePtr = uint32(results[i])
-			m.SubmitWork(work)
+			m.SubmitWork(curWork)
 		}
 
-		endTime = time.Now()
-		diff := endTime.Sub(startTime)
-		startTime = endTime
-
-		if endTime.Sub(callCountTime) > 10*time.Second {
+		now := time.Now()
+		if m.debug && now.Sub(callCountTime) > 10*time.Second {
 			log.Infof("calls=%d", callCount)
+			log.Infof("s/iter XMRunWork=%.2f", time.Duration(runWorkDuration/int64(callCount)).Seconds())
+			runWorkDuration = 0
 			callCount = 0
-			callCountTime = endTime
+			callCountTime = now
 		}
-		m.InformHashrate(uint32(m.Context.RawIntensity), diff)
-
-		consumeWork()
-		log.Debugf("XMRRunWork=%.2f", runWorkDuration.Seconds())
-		callCount++
+		m.InformHashrate(uint32(m.Context.RawIntensity))
 	}
 }
 
