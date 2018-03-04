@@ -94,7 +94,7 @@ func TestGetJob(t *testing.T) {
 }
 
 func TestMain(m *testing.M) {
-	log.SetLevel(log.DebugLevel)
+	log.SetLevel(log.WarnLevel)
 
 	b, err := ioutil.ReadFile("test-config.yaml")
 	if err != nil {
