@@ -12,6 +12,7 @@ import (
 	stratum "github.com/gurupras/go-stratum-client"
 	gpuminer "github.com/gurupras/go-stratum-client/gpu-miner"
 	amdgpu "github.com/gurupras/go-stratum-client/gpu-miner/amd"
+	"github.com/gurupras/go-stratum-client/gpu-miner/gpucontext"
 	"github.com/gurupras/go-stratum-client/miner"
 	colorable "github.com/mattn/go-colorable"
 	log "github.com/sirupsen/logrus"
@@ -23,6 +24,7 @@ var (
 	config     = app.Flag("config-file", "YAML config file").Short('c').Required().String()
 	verbose    = app.Flag("verbose", "Enable verbose log messages").Short('v').Bool()
 	debug      = app.Flag("debug", "Enable miner debugging log messages").Short('d').Default("false").Bool()
+	useC       = app.Flag("use C", "Use C functions to intialize OpenCL  rather than Golang").Short('C').Default("false").Bool()
 	cpuprofile = app.Flag("cpuprofile", "Run CPU profiler").String()
 )
 
@@ -79,6 +81,8 @@ func main() {
 		log.SetOutput(colorable.NewColorableStdout())
 	}
 
+	amdgpu.UseC = *useC
+
 	if *verbose {
 		log.SetLevel(log.DebugLevel)
 	}
@@ -112,7 +116,7 @@ func main() {
 
 	numMiners := len(config.Threads)
 	miners := make([]miner.Interface, numMiners)
-	gpuContexts := make([]*amdgpu.GPUContext, numMiners)
+	gpuContexts := make([]*gpucontext.GPUContext, numMiners)
 
 	for i := 0; i < numMiners; i++ {
 		threadInfo := config.Threads[i]

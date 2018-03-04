@@ -1,7 +1,7 @@
-package amdgpu
+package gpucontext
 
 /*
-#include "ocl_gpu.h"
+#include "gpu_context.h"
 */
 import "C"
 

@@ -1,4 +1,4 @@
-package amdgpu
+package gpucontext
 
 import (
 	"testing"

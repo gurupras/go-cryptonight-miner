@@ -1,7 +1,7 @@
 package amdgpu
 
 /*
-#cgo CFLAGS: -I CL
+#cgo CFLAGS: -Icl -I.
 #cgo !darwin LDFLAGS: -lOpenCL
 #cgo darwin LDFLAGS: -framework OpenCL
 
@@ -17,8 +17,13 @@ import (
 	"unsafe"
 
 	amdgpu_cl "github.com/gurupras/go-stratum-client/gpu-miner/amd/cl"
+	"github.com/gurupras/go-stratum-client/gpu-miner/gpucontext"
 	cl "github.com/rainliu/gocl/cl"
 	log "github.com/sirupsen/logrus"
+)
+
+var (
+	UseC bool = false
 )
 
 const (
@@ -61,7 +66,7 @@ func getDeviceInfoBytes(deviceId cl.CL_device_id, info cl.CL_device_info, size c
 	return []byte(ret.(string)), nil
 }
 
-func getAMDDevices(index int) (contexts []*GPUContext) {
+func getAMDDevices(index int) (contexts []*gpucontext.GPUContext) {
 	numPlatforms := getNumPlatforms()
 
 	platforms := make([]cl.CL_platform_id, numPlatforms)
@@ -73,7 +78,7 @@ func getAMDDevices(index int) (contexts []*GPUContext) {
 	deviceList := make([]cl.CL_device_id, numDevices)
 	cl.CLGetDeviceIDs(platforms[index], cl.CL_DEVICE_TYPE_GPU, numDevices, deviceList, nil)
 
-	contexts = make([]*GPUContext, 0)
+	contexts = make([]*gpucontext.GPUContext, 0)
 	for i := cl.CL_uint(0); i < numDevices; i++ {
 		data, err := getDeviceInfoBytes(deviceList[i], cl.CL_DEVICE_VENDOR, 256)
 		if err != nil {
@@ -85,7 +90,7 @@ func getAMDDevices(index int) (contexts []*GPUContext) {
 			continue
 		}
 
-		ctx := New(int(i), 0, 0)
+		ctx := gpucontext.New(int(i), 0, 0)
 		ctx.DeviceID = deviceList[i]
 		ctx.ComputeUnits = getDeviceMaxComputeUnits(ctx.DeviceID)
 
@@ -132,7 +137,7 @@ func printPlatforms() {
 	}
 }
 
-func setKernelArgFromExtraBuffers(ctx *GPUContext, kernel int, argument cl.CL_uint, offset int) bool {
+func setKernelArgFromExtraBuffers(ctx *gpucontext.GPUContext, kernel int, argument cl.CL_uint, offset int) bool {
 	buf := ctx.ExtraBuffers[offset]
 	if ret := cl.CLSetKernelArg(ctx.Kernels[kernel], argument, clMemSize(), unsafe.Pointer(&buf)); ret != cl.CL_SUCCESS {
 		return false
@@ -140,7 +145,7 @@ func setKernelArgFromExtraBuffers(ctx *GPUContext, kernel int, argument cl.CL_ui
 	return true
 }
 
-func InitOpenCLGPU(index int, clCtx cl.CL_context, ctx *GPUContext, code [][]byte) error {
+func GoInitOpenCLGPU(index int, clCtx cl.CL_context, ctx *gpucontext.GPUContext, code [][]byte) error {
 
 	var maxWorkSizeIntf interface{}
 
@@ -284,7 +289,62 @@ func getAMDPlatformIndex() int {
 	return -1
 }
 
-func InitOpenCL(gpuContexts []*GPUContext, numGPUs int, platformIndex int) error {
+func getCode() string {
+	cryptonightCL := amdgpu_cl.Cryptonight_CL_STR
+	blake256CL := amdgpu_cl.Blake256_CL_STR
+	groestl256CL := amdgpu_cl.Groestl256_CL_STR
+	jhCL := amdgpu_cl.JH_CL_STR
+	wolfAesCL := amdgpu_cl.WolfAES_CL_STR
+	skeinCL := amdgpu_cl.Skein_CL_STR
+
+	code := cryptonightCL
+	replacementMap := make(map[string]string)
+	replacementMap["XMRIG_INCLUDE_WOLF_AES"] = wolfAesCL
+	replacementMap["XMRIG_INCLUDE_WOLF_SKEIN"] = skeinCL
+	replacementMap["XMRIG_INCLUDE_JH"] = jhCL
+	replacementMap["XMRIG_INCLUDE_BLAKE256"] = blake256CL
+	replacementMap["XMRIG_INCLUDE_GROESTL256"] = groestl256CL
+
+	for k, v := range replacementMap {
+		code = strings.Replace(code, k, v, -1)
+		if strings.Contains(code, k) {
+			log.Warnf("Failed to replace code: %v", k)
+		}
+	}
+	return code
+}
+func InitOpenCL(gpuContexts []*gpucontext.GPUContext, numGPUs int, platformIndex int) error {
+	if UseC {
+		return CInitOpenCL(gpuContexts, numGPUs, platformIndex)
+	} else {
+		return GoInitOpenCL(gpuContexts, numGPUs, platformIndex)
+	}
+}
+
+func CInitOpenCL(gpuContexts []*gpucontext.GPUContext, numGPUs int, platformIndex int) error {
+	cContexts := make([]uint64, len(gpuContexts))
+
+	code := getCode()
+	cCode := C.CString(code)
+
+	for i := 0; i < len(gpuContexts); i++ {
+		cCtx := gpuContexts[i].AsCStruct()
+		cContexts[i] = uint64(uintptr(unsafe.Pointer(cCtx)))
+	}
+
+	// contextPtrs := make([]uintptr, len(gpuContexts))
+	// for i := 0; i < len(gpuContexts); i++ {
+	// 	contextPtrs[i] = unsafe.Pointer(&cContexts[i])
+	// }
+
+	ctxPtr := unsafe.Pointer(&cContexts[0])
+	if ret := C.InitOpenCL(ctxPtr, C.int(numGPUs), C.int(platformIndex), cCode); ret != 0 {
+		return fmt.Errorf("Failed to initialize OpenCL: %v", ret)
+	}
+	return nil
+}
+
+func GoInitOpenCL(gpuContexts []*gpucontext.GPUContext, numGPUs int, platformIndex int) error {
 	numPlatforms := getNumPlatforms()
 	if numPlatforms == 0 {
 		return fmt.Errorf("Did not find any OpenCL platforms")
@@ -337,39 +397,39 @@ func InitOpenCL(gpuContexts []*GPUContext, numGPUs int, platformIndex int) error
 		return fmt.Errorf("Error when calling clCreateContext: %v", err_to_str(ret))
 	}
 
-	cryptonightCL := amdgpu_cl.Cryptonight_CL_STR
-	blake256CL := amdgpu_cl.Blake256_CL_STR
-	groestl256CL := amdgpu_cl.Groestl256_CL_STR
-	jhCL := amdgpu_cl.JH_CL_STR
-	wolfAesCL := amdgpu_cl.WolfAES_CL_STR
-	skeinCL := amdgpu_cl.Skein_CL_STR
-
-	code := cryptonightCL
-	replacementMap := make(map[string]string)
-	replacementMap["XMRIG_INCLUDE_WOLF_AES"] = wolfAesCL
-	replacementMap["XMRIG_INCLUDE_WOLF_SKEIN"] = skeinCL
-	replacementMap["XMRIG_INCLUDE_JH"] = jhCL
-	replacementMap["XMRIG_INCLUDE_BLAKE256"] = blake256CL
-	replacementMap["XMRIG_INCLUDE_GROESTL256"] = groestl256CL
-
-	for k, v := range replacementMap {
-		code = strings.Replace(code, k, v, -1)
-		if strings.Contains(code, k) {
-			log.Warnf("Failed to replace code: %v", k)
-		}
-	}
+	code := getCode()
 
 	var codeBytes [1][]byte
 	codeBytes[0] = []byte(code)
 	for i := 0; i < numGPUs; i++ {
-		if err := InitOpenCLGPU(i, clCtx, gpuContexts[i], codeBytes[:]); err != nil {
+		if err := GoInitOpenCLGPU(i, clCtx, gpuContexts[i], codeBytes[:]); err != nil {
 			return err
 		}
 	}
 	return nil
 }
 
-func XMRSetWork(ctx *GPUContext, input []byte, workSize int, target uint64) error {
+func SetWork(ctx *gpucontext.GPUContext, input []byte, workSize int, target uint64) error {
+	if UseC {
+		return CSetWork(ctx, input, workSize, target)
+	}
+	return GoSetWork(ctx, input, workSize, target)
+}
+
+func CSetWork(ctx *gpucontext.GPUContext, input []byte, workSize int, target uint64) error {
+	cs := ctx.AsCStruct()
+	ctxPtr := unsafe.Pointer(cs)
+
+	inputPtr := unsafe.Pointer(&input[0])
+	targetPtr := unsafe.Pointer(&target)
+
+	if err := C.XMRSetWork(ctxPtr, inputPtr, C.int(workSize), targetPtr); err != 0 {
+		return fmt.Errorf("Failed to run C XMRSetWork: %v", err)
+	}
+	return nil
+}
+
+func GoSetWork(ctx *gpucontext.GPUContext, input []byte, workSize int, target uint64) error {
 	var ret cl.CL_int
 
 	if workSize > 84 {
@@ -474,7 +534,14 @@ func clGetSize(v interface{}) cl.CL_size_t {
 	return clSizeWrap(unsafe.Sizeof(v))
 }
 
-func RunWork(ctx *GPUContext, hashResults []cl.CL_int) error {
+func RunWork(ctx *gpucontext.GPUContext, hashResults []cl.CL_int) error {
+	if UseC {
+		return CRunWork(ctx, hashResults)
+	}
+	return GoRunWork(ctx, hashResults)
+}
+
+func CRunWork(ctx *gpucontext.GPUContext, hashResults []cl.CL_int) error {
 	cs := ctx.AsCStruct()
 	ctxPtr := unsafe.Pointer(cs)
 	resultsPtr := unsafe.Pointer(&hashResults[0])
@@ -486,7 +553,7 @@ func RunWork(ctx *GPUContext, hashResults []cl.CL_int) error {
 	return nil
 }
 
-func XMRRunWork(ctx *GPUContext, hashResults []cl.CL_int) error {
+func GoRunWork(ctx *gpucontext.GPUContext, hashResults []cl.CL_int) error {
 	var (
 		ret  cl.CL_int
 		zero cl.CL_uint = 0
@@ -589,7 +656,7 @@ func XMRRunWork(ctx *GPUContext, hashResults []cl.CL_int) error {
 	return nil
 }
 
-func testCContext(ctx *GPUContext) error {
+func testCContext(ctx *gpucontext.GPUContext) error {
 	cs := ctx.AsCStruct()
 	ptr := unsafe.Pointer(cs)
 	cu := 0

@@ -3,6 +3,7 @@ package gpuminer
 import (
 	"bytes"
 	"encoding/binary"
+	"runtime"
 	"strings"
 	"sync"
 	"sync/atomic"
@@ -13,6 +14,7 @@ import (
 	cpuminer "github.com/gurupras/go-stratum-client/cpu-miner"
 	"github.com/gurupras/go-stratum-client/cpu-miner/xmrig_crypto"
 	amdgpu "github.com/gurupras/go-stratum-client/gpu-miner/amd"
+	"github.com/gurupras/go-stratum-client/gpu-miner/gpucontext"
 	"github.com/gurupras/go-stratum-client/miner"
 	"github.com/rainliu/gocl/cl"
 	log "github.com/sirupsen/logrus"
@@ -26,7 +28,7 @@ var (
 type GPUMiner struct {
 	*stratum.StratumContext
 	*miner.Miner
-	Context   *amdgpu.GPUContext
+	Context   *gpucontext.GPUContext
 	Index     int
 	Intensity int
 	WorkSize  int
@@ -37,7 +39,7 @@ func NewGPUMiner(sc *stratum.StratumContext, index, intensity, worksize int) *GP
 	miner := &GPUMiner{
 		sc,
 		miner.New(minerId),
-		amdgpu.New(index, intensity, worksize),
+		gpucontext.New(index, intensity, worksize),
 		index,
 		intensity,
 		worksize,
@@ -74,6 +76,7 @@ func (clr CLResult) Zero() {
 }
 
 func (m *GPUMiner) Run() error {
+	runtime.LockOSThread()
 	results := make(CLResult, 0x100)
 
 	defaultNonce := 0xffffffff / int(TotalMiners) * (int(m.Id()))
@@ -100,7 +103,7 @@ func (m *GPUMiner) Run() error {
 		cpuminer.WorkCopy(work.Work, newWork)
 		work.UpdateCData()
 		*noncePtr = uint32(defaultNonce)
-		amdgpu.XMRSetWork(m.Context, work.Data, work.Size, work.Target)
+		amdgpu.SetWork(m.Context, work.Data, work.Size, work.Target)
 	}
 
 	go func() {
@@ -135,12 +138,12 @@ func (m *GPUMiner) Run() error {
 
 		if m.debug {
 			tempTime = time.Now()
-			amdgpu.XMRRunWork(m.Context, results)
+			amdgpu.RunWork(m.Context, results)
 			// amdgpu.RunWork(m.Context, results)
 			runWorkDuration += time.Now().Sub(tempTime).Nanoseconds()
 			callCount++
 		} else {
-			amdgpu.XMRRunWork(m.Context, results)
+			amdgpu.RunWork(m.Context, results)
 		}
 
 		for i := 0; i < int(results[0xFF]); i++ {

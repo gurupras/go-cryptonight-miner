@@ -1,15 +1,11 @@
-#ifndef __OCL_GPU_H_
-#define __OCL_GPU_H_
+#ifndef __GPU_CONTEXT_H_
+#define __GPU_CONTEXT_H_
 
 #ifdef __APPLE__
 #include "OpenCL/opencl.h"
 #else
 #include "CL/opencl.h"
 #endif
-
-#define MONERO_MEMORY 2097152
-#define MONERO_MASK   0x1FFFF0
-#define MONERO_ITER   0x80000
 
 struct gpu_context {
   int DeviceIndex;
@@ -28,9 +24,4 @@ struct gpu_context {
   unsigned int Nonce;
 };
 
-char* err_to_str(int ret);
-int InitOpenCL(void *ctx_ptr, int num_gpus, int platform_idx, const char *code);
-int XMRSetWork(void *ctx_ptr, void *input_vptr, int input_len, void *target_ptr);
-int XMRRunWork(void *ctx_ptr, void *results_ptr);
-int testCContext(void *ctx_ptr, void *result);
 #endif
