@@ -5,8 +5,8 @@ import (
 	"sync"
 	"unsafe"
 
-	"github.com/gurupras/go-cryptonite-miner/cpu-miner/xmrig_crypto"
-	"github.com/gurupras/go-cryptonite-miner/miner"
+	"github.com/gurupras/go-cryptonight-miner/cpu-miner/xmrig_crypto"
+	"github.com/gurupras/go-cryptonight-miner/miner"
 	stratum "github.com/gurupras/go-stratum-client"
 	log "github.com/sirupsen/logrus"
 )

@@ -4,7 +4,7 @@ import (
 	"sync/atomic"
 	"unsafe"
 
-	"github.com/gurupras/go-cryptonite-miner/miner"
+	"github.com/gurupras/go-cryptonight-miner/miner"
 	stratum "github.com/gurupras/go-stratum-client"
 )
 

@@ -9,8 +9,8 @@ import (
 	"time"
 
 	"github.com/alecthomas/kingpin"
-	cpuminer "github.com/gurupras/go-cryptonite-miner/cpu-miner"
-	"github.com/gurupras/go-cryptonite-miner/miner"
+	cpuminer "github.com/gurupras/go-cryptonight-miner/cpu-miner"
+	"github.com/gurupras/go-cryptonight-miner/miner"
 	stratum "github.com/gurupras/go-stratum-client"
 	colorable "github.com/mattn/go-colorable"
 	log "github.com/sirupsen/logrus"

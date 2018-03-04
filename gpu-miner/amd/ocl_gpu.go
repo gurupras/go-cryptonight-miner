@@ -401,11 +401,23 @@ func GoInitOpenCL(gpuContexts []*gpucontext.GPUContext, numGPUs int, platformInd
 
 	var codeBytes [1][]byte
 	codeBytes[0] = []byte(code)
+	//wg := sync.WaitGroup{}
+	//failed := false
 	for i := 0; i < numGPUs; i++ {
+		/*
+			wg.Add(1)
+			go func(i int, clCtx cl.CL_context, ctx *gpucontext.GPUContext, code [][]byte) {
+				defer wg.Done()
+				if err := GoInitOpenCLGPU(i, clCtx, ctx, code); err != nil {
+					failed = true
+				}
+			}(i, clCtx, gpuContexts[i], codeBytes[:])
+		*/
 		if err := GoInitOpenCLGPU(i, clCtx, gpuContexts[i], codeBytes[:]); err != nil {
 			return err
 		}
 	}
+	//wg.Wait()
 	return nil
 }
 
