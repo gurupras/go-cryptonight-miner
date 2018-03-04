@@ -12,6 +12,7 @@ import (
 	stratum "github.com/gurupras/go-stratum-client"
 	cpuminer "github.com/gurupras/go-stratum-client/cpu-miner"
 	"github.com/gurupras/go-stratum-client/miner"
+	colorable "github.com/mattn/go-colorable"
 	log "github.com/sirupsen/logrus"
 )
 
@@ -27,6 +28,11 @@ var (
 func main() {
 	kingpin.MustParse(app.Parse(os.Args[1:]))
 
+	if runtime.GOOS == "windows" {
+		log.SetFormatter(&log.TextFormatter{ForceColors: true})
+		log.SetOutput(colorable.NewColorableStdout())
+	}
+
 	if *cpuprofile != "" {
 		f, err := os.Create(*cpuprofile)
 		if err != nil {
@@ -41,23 +47,8 @@ func main() {
 
 	sc := stratum.New()
 
-	hashrateChan := make(chan *miner.HashRate)
-	go func() {
-		duration := 10 * time.Second
-		totalHashes := uint32(0)
-
-		startTime := time.Now()
-		for hr := range hashrateChan {
-			now := time.Now()
-			if now.Sub(startTime) < duration {
-				totalHashes += hr.Hashes
-			} else {
-				log.Infof("Speed: %dH/s", uint32(float64(totalHashes)/(now.Sub(startTime).Seconds())))
-				totalHashes = 0
-				startTime = time.Now()
-			}
-		}
-	}()
+	hashrateChan := make(chan *miner.HashRate, 10)
+	go miner.SetupHashRateLogger(hashrateChan)
 
 	numMiners := *threads
 	miners := make([]miner.Interface, numMiners)
