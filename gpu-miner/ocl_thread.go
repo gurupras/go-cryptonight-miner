@@ -132,7 +132,6 @@ func (m *GPUMiner) Run() error {
 
 	// Main loop
 	for {
-		curWork := work
 		results.Zero()
 
 		if m.debug {
@@ -146,8 +145,9 @@ func (m *GPUMiner) Run() error {
 		}
 
 		for i := 0; i < int(results[0xFF]); i++ {
-			*noncePtr = uint32(results[i])
-			m.SubmitWork(curWork)
+			w := work.Clone()
+			*w.NoncePtr = uint32(results[i])
+			m.SubmitWork(w)
 		}
 
 		now := time.Now()
