@@ -4,5 +4,6 @@ test-config.yaml
 *.a
 .*.sw*
 *profile.out
+coverage.out
 
 *.exe
