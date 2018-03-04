@@ -10,12 +10,12 @@ I'm hoping that this can be addressed via PRs by developers far more knowledgeab
   - Working AMD GPU miner
 
 ## Mining Performance
-CPU mining is slightly slower than XMRig while GPU mining varies quite a bit.
+CPU mining is slightly slower than xmrig while GPU mining varies quite a bit.
 
 ### CPU performance
 **Intel i7 4790K @ 4.4GHz**  
 
-  - XMRig:                 289H/s
+  - xmrig:                 289H/s
   - go-cryptonight-miner:  279H/s
 
 ### GPU performance
@@ -30,6 +30,8 @@ The results reported below are averages over the last minute after allowing the 
 **Configuration**: Threads: 1, Intensity: 1600, Worksize: 8
   - xmrig-amd:            1458H/s
   - go-cryptonight-miner: 1482H/s
+
+**Note**: Due to unknown reasons, the GPU hashrate has sometimes been observed to be ~150H/s lower than xmrig. Performing a GPU reset seems to fix this.
 
 # Build Instructions
 
