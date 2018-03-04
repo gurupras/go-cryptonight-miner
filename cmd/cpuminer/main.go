@@ -10,8 +10,8 @@ import (
 
 	"github.com/alecthomas/kingpin"
 	stratum "github.com/gurupras/go-stratum-client"
-	cpuminer "github.com/gurupras/go-cryptonite-miner/cpu-miner"
-	"github.com/gurupras/go-cryptonite-miner/miner"
+	cpuminer "github.com/gurupras/go-cryptonight-miner/cpu-miner"
+	"github.com/gurupras/go-cryptonight-miner/miner"
 	colorable "github.com/mattn/go-colorable"
 	log "github.com/sirupsen/logrus"
 )
