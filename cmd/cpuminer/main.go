@@ -9,9 +9,9 @@ import (
 	"time"
 
 	"github.com/alecthomas/kingpin"
-	stratum "github.com/gurupras/go-stratum-client"
 	cpuminer "github.com/gurupras/go-cryptonite-miner/cpu-miner"
 	"github.com/gurupras/go-cryptonite-miner/miner"
+	stratum "github.com/gurupras/go-stratum-client"
 	colorable "github.com/mattn/go-colorable"
 	log "github.com/sirupsen/logrus"
 )
@@ -23,10 +23,15 @@ var (
 	password   = app.Flag("password", "Password").Short('p').Default("x").String()
 	threads    = app.Flag("threads", "Number of threads to run").Short('t').Default(fmt.Sprintf("%d", runtime.NumCPU())).Int()
 	cpuprofile = app.Flag("cpuprofile", "Run CPU profiler").String()
+	verbose    = app.Flag("verbose", "Enable verbose log messages").Short('v').Bool()
 )
 
 func main() {
 	kingpin.MustParse(app.Parse(os.Args[1:]))
+
+	if *verbose {
+		log.SetLevel(log.DebugLevel)
+	}
 
 	if runtime.GOOS == "windows" {
 		log.SetFormatter(&log.TextFormatter{ForceColors: true})
