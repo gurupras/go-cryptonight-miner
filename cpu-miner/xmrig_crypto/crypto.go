@@ -27,6 +27,18 @@ func NewXMRigWork() *XMRigWork {
 	}
 }
 
+func (work *XMRigWork) Clone() *XMRigWork {
+	scWork := stratum.NewWork()
+	stratum.WorkCopy(scWork, work.Work)
+
+	ret := &XMRigWork{
+		scWork,
+		nil,
+	}
+	ret.UpdateCData()
+	return ret
+}
+
 type XMRigCData struct {
 	Input        unsafe.Pointer
 	Target       unsafe.Pointer
