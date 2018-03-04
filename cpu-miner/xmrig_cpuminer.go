@@ -1,8 +1,8 @@
 package cpuminer
 
 import (
+	"strings"
 	"sync"
-	"time"
 	"unsafe"
 
 	stratum "github.com/gurupras/go-stratum-client"
@@ -70,7 +70,7 @@ func (m *XMRigCPUMiner) Run() error {
 	consumeWork := func() {
 		workLock.Lock()
 		defer workLock.Unlock()
-		if newWork == nil || newWork.JobID == work.JobID {
+		if newWork == nil || strings.Compare(newWork.JobID, work.JobID) == 0 {
 			return
 		}
 		//log.Debugf("Thread-%d: Got new work - %s", m.id, newWork.JobID)
@@ -81,11 +81,8 @@ func (m *XMRigCPUMiner) Run() error {
 	}
 
 	var (
-		startTime  time.Time
-		endTime    time.Time
 		hashesDone uint32 = 0
 	)
-	startTime = time.Now()
 
 	initialWg.Wait()
 	log.Debugf("Got first job")
@@ -96,10 +93,7 @@ func (m *XMRigCPUMiner) Run() error {
 		hashesDone++
 
 		if hashesDone&0xFF != 0 {
-			endTime = time.Now()
-			startTime = endTime
-			diff := endTime.Sub(startTime)
-			m.InformHashrate(hashesDone, diff)
+			m.InformHashrate(hashesDone)
 			hashesDone = 0
 		}
 
