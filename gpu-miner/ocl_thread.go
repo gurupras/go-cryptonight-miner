@@ -82,7 +82,6 @@ func (m *GPUMiner) Run() error {
 	workLock := sync.Mutex{}
 	work := xmrig_crypto.NewXMRigWork()
 	var newWork *stratum.Work
-	noncePtr := work.NoncePtr
 
 	workChan := make(chan *stratum.Work, 0)
 
@@ -101,7 +100,7 @@ func (m *GPUMiner) Run() error {
 		//log.Debugf("Thread-%d: blob: %v", stratum.BinToStr(newWork.Data))
 		stratum.WorkCopy(work.Work, newWork)
 		work.UpdateCData()
-		*noncePtr = uint32(defaultNonce)
+		m.Context.Nonce = uint32(defaultNonce)
 		amdgpu.SetWork(m.Context, work.Data, work.Size, work.Target)
 	}
 
