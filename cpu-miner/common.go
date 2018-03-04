@@ -1,12 +1,11 @@
 package cpuminer
 
 import (
-	"strings"
 	"sync/atomic"
 	"unsafe"
 
-	stratum "github.com/gurupras/go-stratum-client"
 	"github.com/gurupras/go-cryptonite-miner/miner"
+	stratum "github.com/gurupras/go-stratum-client"
 )
 
 var (
@@ -29,17 +28,4 @@ func New(sc *stratum.StratumContext) *CPUMiner {
 	atomic.AddUint32(&minerId, 1)
 	atomic.AddUint32(&TotalMiners, 1)
 	return miner
-}
-
-func WorkCopy(dest *stratum.Work, src *stratum.Work) {
-	copy(dest.Data, src.Data)
-	dest.Size = src.Size
-	dest.Difficulty = src.Difficulty
-	dest.Target = src.Target
-	if strings.Compare(src.JobID, "") != 0 {
-		dest.JobID = src.JobID
-	}
-	if strings.Compare(src.XNonce2, "") != 0 {
-		dest.XNonce2 = src.XNonce2
-	}
 }

@@ -5,9 +5,9 @@ import (
 	"sync"
 	"unsafe"
 
-	stratum "github.com/gurupras/go-stratum-client"
 	"github.com/gurupras/go-cryptonite-miner/cpu-miner/xmrig_crypto"
 	"github.com/gurupras/go-cryptonite-miner/miner"
+	stratum "github.com/gurupras/go-stratum-client"
 	log "github.com/sirupsen/logrus"
 )
 
@@ -75,7 +75,7 @@ func (m *XMRigCPUMiner) Run() error {
 		}
 		//log.Debugf("Thread-%d: Got new work - %s", m.id, newWork.JobID)
 		//log.Debugf("Thread-%d: blob: %v", stratum.BinToStr(newWork.Data))
-		WorkCopy(work.Work, newWork)
+		stratum.WorkCopy(work.Work, newWork)
 		work.UpdateCData()
 		*noncePtr = uint32(defaultNonce)
 	}
