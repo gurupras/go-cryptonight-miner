@@ -13,7 +13,7 @@ type HashResult struct {
 }
 
 var (
-	HashCheckChan chan *HashResult = make(chan *HashResult, 1000)
+	HashCheckChan chan *HashResult = make(chan *HashResult, 256)
 )
 
 func RunHashChecker() {
