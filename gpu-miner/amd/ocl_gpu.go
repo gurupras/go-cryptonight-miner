@@ -16,8 +16,8 @@ import (
 	"time"
 	"unsafe"
 
-	amdgpu_cl "github.com/gurupras/go-stratum-client/gpu-miner/amd/cl"
-	"github.com/gurupras/go-stratum-client/gpu-miner/gpucontext"
+	amdgpu_cl "github.com/gurupras/go-cryptonite-miner/gpu-miner/amd/cl"
+	"github.com/gurupras/go-cryptonite-miner/gpu-miner/gpucontext"
 	cl "github.com/rainliu/gocl/cl"
 	log "github.com/sirupsen/logrus"
 )

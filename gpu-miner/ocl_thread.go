@@ -11,11 +11,11 @@ import (
 	"unsafe"
 
 	stratum "github.com/gurupras/go-stratum-client"
-	cpuminer "github.com/gurupras/go-stratum-client/cpu-miner"
-	"github.com/gurupras/go-stratum-client/cpu-miner/xmrig_crypto"
-	amdgpu "github.com/gurupras/go-stratum-client/gpu-miner/amd"
-	"github.com/gurupras/go-stratum-client/gpu-miner/gpucontext"
-	"github.com/gurupras/go-stratum-client/miner"
+	cpuminer "github.com/gurupras/go-cryptonite-miner/cpu-miner"
+	"github.com/gurupras/go-cryptonite-miner/cpu-miner/xmrig_crypto"
+	amdgpu "github.com/gurupras/go-cryptonite-miner/gpu-miner/amd"
+	"github.com/gurupras/go-cryptonite-miner/gpu-miner/gpucontext"
+	"github.com/gurupras/go-cryptonite-miner/miner"
 	"github.com/rainliu/gocl/cl"
 	log "github.com/sirupsen/logrus"
 )

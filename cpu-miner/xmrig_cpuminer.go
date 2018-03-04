@@ -6,8 +6,8 @@ import (
 	"unsafe"
 
 	stratum "github.com/gurupras/go-stratum-client"
-	"github.com/gurupras/go-stratum-client/cpu-miner/xmrig_crypto"
-	"github.com/gurupras/go-stratum-client/miner"
+	"github.com/gurupras/go-cryptonite-miner/cpu-miner/xmrig_crypto"
+	"github.com/gurupras/go-cryptonite-miner/miner"
 	log "github.com/sirupsen/logrus"
 )
 

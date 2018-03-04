@@ -9,7 +9,7 @@ import (
 	"time"
 
 	stratum "github.com/gurupras/go-stratum-client"
-	"github.com/gurupras/go-stratum-client/miner"
+	"github.com/gurupras/go-cryptonite-miner/miner"
 	log "github.com/sirupsen/logrus"
 	"github.com/stretchr/testify/require"
 	yaml "gopkg.in/yaml.v2"
