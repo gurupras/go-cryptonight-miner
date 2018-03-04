@@ -54,7 +54,7 @@ func (hd *hashRateTracker) AverageAsString() string {
 }
 
 func SetupHashRateLogger(hashrateChan chan *HashRate) {
-	tenSecondTracker := NewHashRateTracker(10 * time.Second)
+	fifteenSecondTracker := NewHashRateTracker(15 * time.Second)
 	minuteTracker := NewHashRateTracker(1 * time.Minute)
 	fifteenMinuteTracker := NewHashRateTracker(15 * time.Minute)
 
@@ -67,13 +67,13 @@ func SetupHashRateLogger(hashrateChan chan *HashRate) {
 			startTime = time.Now()
 			firstHash = false
 		}
-		tenSecondTracker.Add(hr)
+		fifteenSecondTracker.Add(hr)
 		minuteTracker.Add(hr)
 		fifteenMinuteTracker.Add(hr)
 
 		now := time.Now()
 		if now.Sub(startTime) > duration {
-			log.Infof("\x1B[01;37mspeed\x1B[0m 10s/60s/15m \x1B[01;36m%s\x1B[0m \x1B[22;36m%s %s \x1B[01;36mH/s\x1B[0m max: \x1B[01;36m%s H/s\x1B[0m ", tenSecondTracker.AverageAsString(), minuteTracker.AverageAsString(), fifteenMinuteTracker.AverageAsString(), "n/a")
+			log.Infof("\x1B[01;37mspeed\x1B[0m 15s/60s/15m \x1B[01;36m%s\x1B[0m \x1B[22;36m%s %s \x1B[01;36mH/s\x1B[0m max: \x1B[01;36m%s H/s\x1B[0m ", fifteenSecondTracker.AverageAsString(), minuteTracker.AverageAsString(), fifteenMinuteTracker.AverageAsString(), "n/a")
 			startTime = now
 		}
 	}
