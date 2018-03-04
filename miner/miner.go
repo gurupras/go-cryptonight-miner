@@ -6,11 +6,6 @@ import (
 	"github.com/fatih/set"
 )
 
-type HashRate struct {
-	Hashes    uint32
-	TimeTaken time.Duration
-}
-
 type Miner struct {
 	id                uint32
 	hashrateListeners set.Interface
@@ -38,10 +33,10 @@ func (m *Miner) RegisterHashrateListener(hrChan chan *HashRate) {
 	m.hashrateListeners.Add(hrChan)
 }
 
-func (m *Miner) InformHashrate(hashes uint32, timeTaken time.Duration) {
+func (m *Miner) InformHashrate(hashes uint32) {
 	data := &HashRate{
 		hashes,
-		timeTaken,
+		time.Now(),
 	}
 	for _, obj := range m.hashrateListeners.List() {
 		hrChan := obj.(chan *HashRate)
