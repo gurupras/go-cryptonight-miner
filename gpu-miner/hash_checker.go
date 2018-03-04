@@ -1,8 +1,8 @@
 package gpuminer
 
 import (
-	stratum "github.com/gurupras/go-stratum-client"
 	"github.com/gurupras/go-cryptonite-miner/cpu-miner/xmrig_crypto"
+	stratum "github.com/gurupras/go-stratum-client"
 	log "github.com/sirupsen/logrus"
 )
 
@@ -13,7 +13,7 @@ type HashResult struct {
 }
 
 var (
-	HashCheckChan chan *HashResult = make(chan *HashResult, 10)
+	HashCheckChan chan *HashResult = make(chan *HashResult, 1000)
 )
 
 func RunHashChecker() {
