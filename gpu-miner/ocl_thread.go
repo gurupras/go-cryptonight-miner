@@ -10,12 +10,11 @@ import (
 	"time"
 	"unsafe"
 
-	stratum "github.com/gurupras/go-stratum-client"
-	cpuminer "github.com/gurupras/go-cryptonite-miner/cpu-miner"
 	"github.com/gurupras/go-cryptonite-miner/cpu-miner/xmrig_crypto"
 	amdgpu "github.com/gurupras/go-cryptonite-miner/gpu-miner/amd"
 	"github.com/gurupras/go-cryptonite-miner/gpu-miner/gpucontext"
 	"github.com/gurupras/go-cryptonite-miner/miner"
+	stratum "github.com/gurupras/go-stratum-client"
 	"github.com/rainliu/gocl/cl"
 	log "github.com/sirupsen/logrus"
 )
@@ -100,7 +99,7 @@ func (m *GPUMiner) Run() error {
 		}
 		//log.Debugf("Thread-%d: Got new work - %s", m.id, newWork.JobID)
 		//log.Debugf("Thread-%d: blob: %v", stratum.BinToStr(newWork.Data))
-		cpuminer.WorkCopy(work.Work, newWork)
+		stratum.WorkCopy(work.Work, newWork)
 		work.UpdateCData()
 		*noncePtr = uint32(defaultNonce)
 		amdgpu.SetWork(m.Context, work.Data, work.Size, work.Target)
