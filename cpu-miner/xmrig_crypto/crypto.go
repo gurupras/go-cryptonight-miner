@@ -13,7 +13,6 @@ import (
 	"unsafe"
 
 	stratum "github.com/gurupras/go-stratum-client"
-	log "github.com/sirupsen/logrus"
 )
 
 type XMRigWork struct {
@@ -87,10 +86,10 @@ func CryptonightHash(work *XMRigWork, ctx unsafe.Pointer) ([]byte, bool) {
 	// log.Infof("blob: %v\n", blobBytes)
 	// log.Infof("size: %v", work.Size)
 
-	log.Debugf("cdata.input=%X", work.Cdata.Input)
-	log.Debugf("cdata.Size=%d", work.Cdata.Size)
-	log.Debugf("cdata.hashbytesptr=%X", work.Cdata.HashBytesPtr)
-	log.Debugf("ctx=%X", ctx)
+	// log.Debugf("cdata.input=%X", work.Cdata.Input)
+	// log.Debugf("cdata.Size=%d", work.Cdata.Size)
+	// log.Debugf("cdata.hashbytesptr=%X", work.Cdata.HashBytesPtr)
+	// log.Debugf("ctx=%X", ctx)
 
 	found := C.xmrig_cryptonight_hash_wrapper(work.Cdata.Input, work.Cdata.Size, work.Cdata.HashBytesPtr, targetPtr, ctx)
 	return work.Cdata.HashBytes, found == 1
