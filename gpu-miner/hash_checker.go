@@ -33,6 +33,7 @@ func RunHashChecker() {
 				log.Errorf("RunHashChecker: Failed to convert hash bytes to hex: %v", err)
 				continue
 			}
+			log.Debugf("Submitting id=%d job=%v result=%v", hr.id, hr.XMRigWork.Work.JobID, hashHex)
 			hr.SubmitWork(hr.XMRigWork.Work, hashHex)
 		} else {
 			log.Errorf("GPU #%d COMPUTE ERROR", hr.id)

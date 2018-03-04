@@ -79,6 +79,7 @@ func (m *GPUMiner) Run() error {
 	results := make(CLResult, 0x100)
 
 	defaultNonce := 0xffffffff / int(TotalMiners) * (int(m.Id()))
+	log.Debugf("miner-%d: defaultNonce=%X", m.Id(), defaultNonce)
 	workLock := sync.Mutex{}
 	work := xmrig_crypto.NewXMRigWork()
 	var newWork *stratum.Work
