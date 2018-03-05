@@ -2,7 +2,6 @@ package miner
 
 import (
 	"fmt"
-	"math"
 	"time"
 
 	log "github.com/sirupsen/logrus"
@@ -30,7 +29,7 @@ func NewHashRateTracker(duration time.Duration) *hashRateTracker {
 func (hd *hashRateTracker) Add(hr *HashRate) {
 	hd.hashRates = append(hd.hashRates, hr)
 	duration := hr.Time.Sub(hd.hashRates[0].Time)
-	if duration > hd.duration {
+	if duration > hd.duration*2 {
 		hd.hashes -= hd.hashRates[0].Hashes
 		hd.hashRates = hd.hashRates[1:]
 	}
@@ -38,11 +37,21 @@ func (hd *hashRateTracker) Add(hr *HashRate) {
 }
 
 func (hd *hashRateTracker) Average() uint32 {
-	duration := hd.hashRates[len(hd.hashRates)-1].Time.Sub(hd.hashRates[0].Time)
-	if math.Abs(float64(hd.duration-duration)) > 0.1*float64(hd.duration) {
+	size := len(hd.hashRates)
+	duration := hd.hashRates[size-1].Time.Sub(hd.hashRates[0].Time)
+	if duration < hd.duration {
 		return 0
 	}
-	return uint32(float64(hd.hashes) / duration.Seconds())
+
+	totalHashes := hd.hashRates[size-1].Hashes
+	for i := size - 2; i >= 0; i-- {
+		totalHashes += hd.hashRates[i].Hashes
+		duration = hd.hashRates[size-1].Time.Sub(hd.hashRates[i].Time)
+		if duration > hd.duration {
+			break
+		}
+	}
+	return uint32(float64(totalHashes) / duration.Seconds())
 }
 
 func (hd *hashRateTracker) AverageAsString() string {
