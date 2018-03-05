@@ -19,7 +19,7 @@ static inline void port_sleep(size_t sec)
 }
 #else
 #include <unistd.h>
-
+#include <string.h>
 static inline void port_sleep(size_t sec)
 {
     sleep(sec);

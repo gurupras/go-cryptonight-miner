@@ -124,7 +124,7 @@ void xmrig_cryptonight_hash_void(const void *input, size_t size, const void *out
 static char *print_bin(char *dest, const void *buf, size_t len) {
     int offset = 0;
     for(int i = 0; i < len; i++) {
-        offset += sprintf(dest+offset, "%d", (long) (*(unsigned char *) (buf+i)));
+        offset += sprintf(dest+offset, "%ld", (long) (*(unsigned char *) (buf+i)));
         if(i+1 != len) {
             offset += sprintf(dest+offset, " ");
         }
