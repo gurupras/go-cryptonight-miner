@@ -49,10 +49,10 @@ func (ctx *GPUContext) AsCStruct() *C.struct_gpu_context {
 		ret.FreeMemory = *(*C.cl_ulong)(unsafe.Pointer(&ctx.FreeMemory))
 		ret.ComputeUnits = *(*C.cl_uint)(unsafe.Pointer(&ctx.ComputeUnits))
 		ret.Name = C.CString(ctx.Name)
-		ret.Nonce = C.uint(ctx.Nonce)
-
 		ctx.cStruct = ret
 	}
+	// Nonce may change
+	ctx.cStruct.Nonce = C.uint(ctx.Nonce)
 	return ctx.cStruct
 }
 
