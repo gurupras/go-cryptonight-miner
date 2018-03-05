@@ -21,7 +21,7 @@ CPU mining is slightly slower than xmrig while GPU mining varies quite a bit.
 ### GPU performance
 **RX Vega64 @ 1408+1150MHz**  
 
-The results reported below are averages over the last minute after allowing the miners to run for ~3minutes. The GPU was reset between measurements.
+The results reported below are averages over the last minute after allowing the miners to run for ~3minutes. The GPU was reset between measurements. These results are to be taken with a pinch of salt as the hashrate reporting logic may be incorrect.
 
 **Configuration**: Threads: 2, Intensity: 1856/1600, Worksize: 8
   - xmrig-amd:            2034H/s
