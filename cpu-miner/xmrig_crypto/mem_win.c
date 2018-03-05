@@ -21,6 +21,8 @@
  *   along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
+// Only compile for windows
+#ifdef _WIN32
 
 #include <winsock2.h>
 #include <windows.h>
@@ -141,3 +143,4 @@ bool TrySetLockPagesPrivilege(void) {
 
     return ObtainLockPagesPrivilege() && SetLockPagesPrivilege();
 }
+#endif
