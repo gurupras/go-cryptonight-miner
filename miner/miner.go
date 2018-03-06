@@ -4,6 +4,8 @@ import (
 	"time"
 
 	"github.com/fatih/set"
+	stratum "github.com/gurupras/go-stratum-client"
+	log "github.com/sirupsen/logrus"
 )
 
 type Miner struct {
@@ -42,4 +44,8 @@ func (m *Miner) InformHashrate(hashes uint32) {
 		hrChan := obj.(chan *HashRate)
 		hrChan <- data
 	}
+}
+
+func (m *Miner) LogNewWork(sc *stratum.StratumContext, work *stratum.Work) {
+	log.Infof("\x1B[01;35mnew job\x1B[0m from \x1B[01;37m%v\x1B[0m diff \x1B[01;37m%d \x1B[0m ", sc.RemoteAddr(), int(work.Difficulty))
 }

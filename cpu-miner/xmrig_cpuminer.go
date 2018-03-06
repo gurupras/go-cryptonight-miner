@@ -51,6 +51,7 @@ func (m *XMRigCPUMiner) Run() error {
 		for work := range workChan {
 			workLock.Lock()
 			newWork = work
+			m.LogNewWork(m.StratumContext, newWork)
 			if !gotFirstJob {
 				gotFirstJob = true
 				initialWg.Done()

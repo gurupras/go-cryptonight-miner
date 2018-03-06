@@ -97,6 +97,7 @@ func (m *GPUMiner) Run() error {
 		if newWork == nil || strings.Compare(newWork.JobID, work.JobID) == 0 {
 			return
 		}
+		m.LogNewWork(m.StratumContext, newWork)
 		//log.Debugf("Thread-%d: Got new work - %s", m.id, newWork.JobID)
 		//log.Debugf("Thread-%d: blob: %v", stratum.BinToStr(newWork.Data))
 		stratum.WorkCopy(work.Work, newWork)
