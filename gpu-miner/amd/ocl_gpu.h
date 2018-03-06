@@ -11,6 +11,14 @@
 #define MONERO_MASK   0x1FFFF0
 #define MONERO_ITER   0x80000
 
+enum LOG_TYPE {
+  TYPE_DEBUG = 0,
+  TYPE_INFO = 1,
+  TYPE_WARN = 2,
+  TYPE_ERR = 3,
+  TYPE_FATAL = 4,
+};
+
 struct gpu_context {
   int DeviceIndex;
   int RawIntensity;

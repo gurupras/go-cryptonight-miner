@@ -30,6 +30,24 @@ const (
 	setKernelArgError = "Error %s when calling clSetKernelArg for kernel %d, argument %d"
 )
 
+//export LOG
+func LOG(logType int, msg string) {
+	switch logType {
+	case C.TYPE_DEBUG:
+		log.Debugf(msg)
+	case C.TYPE_INFO:
+		log.Infof(msg)
+	case C.TYPE_ERR:
+		log.Errorf(msg)
+	case C.TYPE_FATAL:
+		log.Fatalf(msg)
+	case C.TYPE_WARN:
+		log.Warnf(msg)
+	default:
+		log.Warnf("Received message from C with unknown log level(%d): %v", logType, msg)
+	}
+}
+
 func portSleep(sec int) {
 	time.Sleep(time.Duration(sec) * time.Second)
 }
