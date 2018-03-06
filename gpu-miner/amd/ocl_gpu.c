@@ -26,7 +26,7 @@ static inline void port_sleep(size_t sec)
 }
 #endif // _WIN32
 
-const char *kSetKernelArgErr = "Error %s when calling clSetKernelArg for kernel %d, argument %d.";
+const char *kSetKernelArgErr = "Error %s when calling clSetKernelArg for kernel %d, argument %d.\n";
 
 char* err_to_str(int ret)
 {
@@ -217,7 +217,7 @@ size_t InitOpenCLGpu(int index, void *opencl_ctx_ptr, void *ctx_ptr, const char*
         cl_int ret;
 
         if ((ret = clGetDeviceInfo(ctx->DeviceID, CL_DEVICE_MAX_WORK_GROUP_SIZE, sizeof(size_t), &MaximumWorkSize, NULL)) != CL_SUCCESS) {
-                printf("Error %s when querying a device's max worksize using clGetDeviceInfo.", err_to_str(ret));
+                printf("Error %s when querying a device's max worksize using clGetDeviceInfo.\n", err_to_str(ret));
                 return OCL_ERR_API;
         }
 
@@ -225,7 +225,7 @@ size_t InitOpenCLGpu(int index, void *opencl_ctx_ptr, void *ctx_ptr, const char*
         getDeviceName(ctx->DeviceID, buf, sizeof(buf));
         ctx->ComputeUnits = getDeviceMaxComputeUnits(ctx->DeviceID);
 
-        printf("\x1B[01;37m#%d\x1B[0m, GPU \x1B[01;37m#%lu\x1B[0m \x1B[01;32m%s\x1B[0m, intensity: \x1B[01;37m%lu\x1B[0m (%lu/%lu), cu: \x1B[01;37m%d",
+        printf("\x1B[01;37m#%d\x1B[0m, GPU \x1B[01;37m#%lu\x1B[0m \x1B[01;32m%s\x1B[0m, intensity: \x1B[01;37m%lu\x1B[0m (%lu/%lu), cu: \x1B[01;37m%d\n",
                  index, ctx->DeviceIndex, buf, ctx->RawIntensity, ctx->WorkSize, MaximumWorkSize, ctx->ComputeUnits);
 
 #   ifdef CL_VERSION_2_0
@@ -237,13 +237,13 @@ size_t InitOpenCLGpu(int index, void *opencl_ctx_ptr, void *ctx_ptr, const char*
 #   endif
 
         if (ret != CL_SUCCESS) {
-                printf("Error %s when calling clCreateCommandQueueWithProperties.", err_to_str(ret));
+                printf("Error %s when calling clCreateCommandQueueWithProperties.\n", err_to_str(ret));
                 return OCL_ERR_API;
         }
 
         ctx->InputBuffer = clCreateBuffer(opencl_ctx, CL_MEM_READ_ONLY, 88, NULL, &ret);
         if (ret != CL_SUCCESS) {
-                printf("Error %s when calling clCreateBuffer to create input buffer.", err_to_str(ret));
+                printf("Error %s when calling clCreateBuffer to create input buffer.\n", err_to_str(ret));
                 return OCL_ERR_API;
         }
 
@@ -259,54 +259,54 @@ size_t InitOpenCLGpu(int index, void *opencl_ctx_ptr, void *ctx_ptr, const char*
         size_t g_thd = ctx->RawIntensity;
         ctx->ExtraBuffers[0] = clCreateBuffer(opencl_ctx, CL_MEM_READ_WRITE, hashMemSize * g_thd, NULL, &ret);
         if (ret != CL_SUCCESS) {
-                printf("Error %s when calling clCreateBuffer to create hash scratchpads buffer.", err_to_str(ret));
+                printf("Error %s when calling clCreateBuffer to create hash scratchpads buffer.\n", err_to_str(ret));
                 return OCL_ERR_API;
         }
 
         ctx->ExtraBuffers[1] = clCreateBuffer(opencl_ctx, CL_MEM_READ_WRITE, 200 * g_thd, NULL, &ret);
         if(ret != CL_SUCCESS) {
-                printf("Error %s when calling clCreateBuffer to create hash states buffer.", err_to_str(ret));
+                printf("Error %s when calling clCreateBuffer to create hash states buffer.\n", err_to_str(ret));
                 return OCL_ERR_API;
         }
 
         // Blake-256 branches
         ctx->ExtraBuffers[2] = clCreateBuffer(opencl_ctx, CL_MEM_READ_WRITE, sizeof(cl_uint) * (g_thd + 2), NULL, &ret);
         if (ret != CL_SUCCESS) {
-                printf("Error %s when calling clCreateBuffer to create Branch 0 buffer.", err_to_str(ret));
+                printf("Error %s when calling clCreateBuffer to create Branch 0 buffer.\n", err_to_str(ret));
                 return OCL_ERR_API;
         }
 
         // Groestl-256 branches
         ctx->ExtraBuffers[3] = clCreateBuffer(opencl_ctx, CL_MEM_READ_WRITE, sizeof(cl_uint) * (g_thd + 2), NULL, &ret);
         if(ret != CL_SUCCESS) {
-                printf("Error %s when calling clCreateBuffer to create Branch 1 buffer.", err_to_str(ret));
+                printf("Error %s when calling clCreateBuffer to create Branch 1 buffer.\n", err_to_str(ret));
                 return OCL_ERR_API;
         }
 
         // JH-256 branches
         ctx->ExtraBuffers[4] = clCreateBuffer(opencl_ctx, CL_MEM_READ_WRITE, sizeof(cl_uint) * (g_thd + 2), NULL, &ret);
         if (ret != CL_SUCCESS) {
-                printf("Error %s when calling clCreateBuffer to create Branch 2 buffer.", err_to_str(ret));
+                printf("Error %s when calling clCreateBuffer to create Branch 2 buffer.\n", err_to_str(ret));
                 return OCL_ERR_API;
         }
 
         // Skein-512 branches
         ctx->ExtraBuffers[5] = clCreateBuffer(opencl_ctx, CL_MEM_READ_WRITE, sizeof(cl_uint) * (g_thd + 2), NULL, &ret);
         if (ret != CL_SUCCESS) {
-                printf("Error %s when calling clCreateBuffer to create Branch 3 buffer.", err_to_str(ret));
+                printf("Error %s when calling clCreateBuffer to create Branch 3 buffer.\n", err_to_str(ret));
                 return OCL_ERR_API;
         }
 
         // Assume we may find up to 0xFF nonces in one run - it's reasonable
         ctx->OutputBuffer = clCreateBuffer(opencl_ctx, CL_MEM_READ_WRITE, sizeof(cl_uint) * 0x100, NULL, &ret);
         if (ret != CL_SUCCESS) {
-                printf("Error %s when calling clCreateBuffer to create output buffer.", err_to_str(ret));
+                printf("Error %s when calling clCreateBuffer to create output buffer.\n", err_to_str(ret));
                 return OCL_ERR_API;
         }
 
         ctx->Program = clCreateProgramWithSource(opencl_ctx, 1, (const char**)&source_code, NULL, &ret);
         if (ret != CL_SUCCESS) {
-                printf("Error %s when calling clCreateProgramWithSource on the contents of cryptonight.cl", err_to_str(ret));
+                printf("Error %s when calling clCreateProgramWithSource on the contents of cryptonight.cl\n", err_to_str(ret));
                 return OCL_ERR_API;
         }
 
@@ -315,10 +315,10 @@ size_t InitOpenCLGpu(int index, void *opencl_ctx_ptr, void *ctx_ptr, const char*
         ret = clBuildProgram(ctx->Program, 1, &ctx->DeviceID, options, NULL, NULL);
         if (ret != CL_SUCCESS) {
                 size_t len;
-                printf("Error %s when calling clBuildProgram.", err_to_str(ret));
+                printf("Error %s when calling clBuildProgram.\n", err_to_str(ret));
 
                 if ((ret = clGetProgramBuildInfo(ctx->Program, ctx->DeviceID, CL_PROGRAM_BUILD_LOG, 0, NULL, &len)) != CL_SUCCESS) {
-                        printf("Error %s when calling clGetProgramBuildInfo for length of build log output.", err_to_str(ret));
+                        printf("Error %s when calling clGetProgramBuildInfo for length of build log output.\n", err_to_str(ret));
                         return OCL_ERR_API;
                 }
 
@@ -327,7 +327,7 @@ size_t InitOpenCLGpu(int index, void *opencl_ctx_ptr, void *ctx_ptr, const char*
 
                 if ((ret = clGetProgramBuildInfo(ctx->Program, ctx->DeviceID, CL_PROGRAM_BUILD_LOG, len, BuildLog, NULL)) != CL_SUCCESS) {
                         free(BuildLog);
-                        printf("Error %s when calling clGetProgramBuildInfo for build log.", err_to_str(ret));
+                        printf("Error %s when calling clGetProgramBuildInfo for build log.\n", err_to_str(ret));
                         return OCL_ERR_API;
                 }
 
@@ -341,7 +341,7 @@ size_t InitOpenCLGpu(int index, void *opencl_ctx_ptr, void *ctx_ptr, const char*
         do
         {
                 if ((ret = clGetProgramBuildInfo(ctx->Program, ctx->DeviceID, CL_PROGRAM_BUILD_STATUS, sizeof(cl_build_status), &status, NULL)) != CL_SUCCESS) {
-                        printf("Error %s when calling clGetProgramBuildInfo for status of build.", err_to_str(ret));
+                        printf("Error %s when calling clGetProgramBuildInfo for status of build.\n", err_to_str(ret));
                         return OCL_ERR_API;
                 }
                 port_sleep(1);
@@ -352,7 +352,7 @@ size_t InitOpenCLGpu(int index, void *opencl_ctx_ptr, void *ctx_ptr, const char*
         for(int i = 0; i < 7; ++i) {
                 ctx->Kernels[i] = clCreateKernel(ctx->Program, KernelNames[i], &ret);
                 if (ret != CL_SUCCESS) {
-                        printf("Error %s when calling clCreateKernel for kernel %s.", err_to_str(ret), KernelNames[i]);
+                        printf("Error %s when calling clCreateKernel for kernel %s.\n", err_to_str(ret), KernelNames[i]);
                         return OCL_ERR_API;
                 }
         }
@@ -380,7 +380,7 @@ int InitOpenCL(void *ctx_ptr, int num_gpus, int platform_idx, const char *code)
 
     // The number of platforms naturally is the index of the last platform plus one.
     if (entries <= platform_idx) {
-        printf("Selected OpenCL platform index %d doesn't exist.", platform_idx);
+        printf("Selected OpenCL platform index %d doesn't exist.\n", platform_idx);
         return OCL_ERR_BAD_PARAMS;
     }
 
@@ -391,7 +391,7 @@ int InitOpenCL(void *ctx_ptr, int num_gpus, int platform_idx, const char *code)
     clGetPlatformInfo(platforms[platform_idx], CL_PLATFORM_VENDOR, sizeof(buf), buf, NULL);
 
     if (strstr(buf, "Advanced Micro Devices") == NULL) {
-        printf("using non AMD device: %s", buf);
+        printf("using non AMD device: %s\n", buf);
     }
 
     free(platforms);
@@ -405,12 +405,12 @@ int InitOpenCL(void *ctx_ptr, int num_gpus, int platform_idx, const char *code)
 
     cl_int ret;
     if ((ret = clGetPlatformIDs(entries, PlatformIDList, NULL)) != CL_SUCCESS) {
-        printf("Error %s when calling clGetPlatformIDs for platform ID information.", err_to_str(ret));
+        printf("Error %s when calling clGetPlatformIDs for platform ID information.\n", err_to_str(ret));
         return OCL_ERR_API;
     }
 
     if ((ret = clGetDeviceIDs(PlatformIDList[platform_idx], CL_DEVICE_TYPE_GPU, 0, NULL, &entries)) != CL_SUCCESS) {
-        printf("Error %s when calling clGetDeviceIDs for number of devices.", err_to_str(ret));
+        printf("Error %s when calling clGetDeviceIDs for number of devices.\n", err_to_str(ret));
         return OCL_ERR_API;
     }
 
@@ -429,7 +429,7 @@ int InitOpenCL(void *ctx_ptr, int num_gpus, int platform_idx, const char *code)
 #   endif
 
     if((ret = clGetDeviceIDs(PlatformIDList[platform_idx], CL_DEVICE_TYPE_GPU, entries, DeviceIDList, NULL)) != CL_SUCCESS) {
-        printf("Error %s when calling clGetDeviceIDs for device ID information.", err_to_str(ret));
+        printf("Error %s when calling clGetDeviceIDs for device ID information.\n", err_to_str(ret));
         return OCL_ERR_API;
     }
 
@@ -447,7 +447,7 @@ int InitOpenCL(void *ctx_ptr, int num_gpus, int platform_idx, const char *code)
 
     cl_context opencl_ctx = clCreateContext(NULL, num_gpus, TempDeviceList, NULL, NULL, &ret);
     if(ret != CL_SUCCESS) {
-        printf("Error %s when calling clCreateContext.", err_to_str(ret));
+        printf("Error %s when calling clCreateContext.\n", err_to_str(ret));
         return OCL_ERR_API;
     }
 
@@ -478,7 +478,7 @@ int XMRSetWork(void *ctx_ptr, void *input_ptr, int input_len, void *target_ptr)
         size_t numThreads = ctx->RawIntensity;
 
         if ((ret = clEnqueueWriteBuffer(ctx->CommandQueues, ctx->InputBuffer, CL_TRUE, 0, 88, input, 0, NULL, NULL)) != CL_SUCCESS) {
-                printf("Error %s when calling clEnqueueWriteBuffer to fill input buffer.", err_to_str(ret));
+                printf("Error %s when calling clEnqueueWriteBuffer to fill input buffer.\n", err_to_str(ret));
                 return OCL_ERR_API;
         }
 
@@ -572,7 +572,7 @@ int XMRRunWork(void *ctx_ptr, void *results_ptr) {
                                                 sizeof(cl_uint), &zero, 0, NULL, NULL)) !=
                     CL_SUCCESS) {
                         printf("Error %s when calling clEnqueueWriteBuffer to zero branch "
-                               "buffer counter %d.",
+                               "buffer counter %d.\n",
                                err_to_str(ret), i - 2);
                         return OCL_ERR_API;
                 }
@@ -582,7 +582,7 @@ int XMRRunWork(void *ctx_ptr, void *results_ptr) {
                                         CL_FALSE, sizeof(cl_uint) * 0xFF,
                                         sizeof(cl_uint), &zero, 0, NULL, NULL)) !=
             CL_SUCCESS) {
-                printf("Error %s when calling clEnqueueReadBuffer to fetch results.",
+                printf("Error %s when calling clEnqueueReadBuffer to fetch results.\n",
                        err_to_str(ret));
                 return OCL_ERR_API;
         }
@@ -594,7 +594,7 @@ int XMRRunWork(void *ctx_ptr, void *results_ptr) {
         if ((ret = clEnqueueNDRangeKernel(ctx->CommandQueues, ctx->Kernels[0], 2,
                                           Nonce, gthreads, lthreads, 0, NULL,
                                           NULL)) != CL_SUCCESS) {
-                printf("Error %s when calling clEnqueueNDRangeKernel for kernel %d.",
+                printf("Error %s when calling clEnqueueNDRangeKernel for kernel %d.\n",
                        err_to_str(ret), 0);
                 return OCL_ERR_API;
         }
@@ -614,7 +614,7 @@ int XMRRunWork(void *ctx_ptr, void *results_ptr) {
         if ((ret = clEnqueueNDRangeKernel(ctx->CommandQueues, ctx->Kernels[1], 1,
                                           &tmpNonce, &g_thd, &w_size, 0, NULL,
                                           NULL)) != CL_SUCCESS) {
-                printf("Error %s when calling clEnqueueNDRangeKernel for kernel %d.",
+                printf("Error %s when calling clEnqueueNDRangeKernel for kernel %d.\n",
                        err_to_str(ret), 1);
                 return OCL_ERR_API;
         }
@@ -622,7 +622,7 @@ int XMRRunWork(void *ctx_ptr, void *results_ptr) {
         if ((ret = clEnqueueNDRangeKernel(ctx->CommandQueues, ctx->Kernels[2], 2,
                                           Nonce, gthreads, lthreads, 0, NULL,
                                           NULL)) != CL_SUCCESS) {
-                printf("Error %s when calling clEnqueueNDRangeKernel for kernel %d.",
+                printf("Error %s when calling clEnqueueNDRangeKernel for kernel %d.\n",
                        err_to_str(ret), 2);
                 return OCL_ERR_API;
         }
@@ -631,7 +631,7 @@ int XMRRunWork(void *ctx_ptr, void *results_ptr) {
                                        CL_FALSE, sizeof(cl_uint) * g_intensity,
                                        sizeof(cl_uint), BranchNonces, 0, NULL,
                                        NULL)) != CL_SUCCESS) {
-                printf("Error %s when calling clEnqueueReadBuffer to fetch results.",
+                printf("Error %s when calling clEnqueueReadBuffer to fetch results.\n",
                        err_to_str(ret));
                 return OCL_ERR_API;
         }
@@ -640,7 +640,7 @@ int XMRRunWork(void *ctx_ptr, void *results_ptr) {
                                        CL_FALSE, sizeof(cl_uint) * g_intensity,
                                        sizeof(cl_uint), BranchNonces + 1, 0, NULL,
                                        NULL)) != CL_SUCCESS) {
-                printf("Error %s when calling clEnqueueReadBuffer to fetch results.",
+                printf("Error %s when calling clEnqueueReadBuffer to fetch results.\n",
                        err_to_str(ret));
                 return OCL_ERR_API;
         }
@@ -649,7 +649,7 @@ int XMRRunWork(void *ctx_ptr, void *results_ptr) {
                                        CL_FALSE, sizeof(cl_uint) * g_intensity,
                                        sizeof(cl_uint), BranchNonces + 2, 0, NULL,
                                        NULL)) != CL_SUCCESS) {
-                printf("Error %s when calling clEnqueueReadBuffer to fetch results.",
+                printf("Error %s when calling clEnqueueReadBuffer to fetch results.\n",
                        err_to_str(ret));
                 return OCL_ERR_API;
         }
@@ -658,7 +658,7 @@ int XMRRunWork(void *ctx_ptr, void *results_ptr) {
                                        CL_FALSE, sizeof(cl_uint) * g_intensity,
                                        sizeof(cl_uint), BranchNonces + 3, 0, NULL,
                                        NULL)) != CL_SUCCESS) {
-                printf("Error %s when calling clEnqueueReadBuffer to fetch results.",
+                printf("Error %s when calling clEnqueueReadBuffer to fetch results.\n",
                        err_to_str(ret));
                 return OCL_ERR_API;
         }
@@ -683,7 +683,7 @@ int XMRRunWork(void *ctx_ptr, void *results_ptr) {
                         if ((ret = clEnqueueNDRangeKernel(ctx->CommandQueues, ctx->Kernels[i + 3],
                                                           1, &tmpNonce, BranchNonces + i, &w_size,
                                                           0, NULL, NULL)) != CL_SUCCESS) {
-                                printf("Error %s when calling clEnqueueNDRangeKernel for kernel %d.",
+                                printf("Error %s when calling clEnqueueNDRangeKernel for kernel %d.\n",
                                        err_to_str(ret), i + 3);
                                 return OCL_ERR_API;
                         }
@@ -693,7 +693,7 @@ int XMRRunWork(void *ctx_ptr, void *results_ptr) {
         if ((ret = clEnqueueReadBuffer(ctx->CommandQueues, ctx->OutputBuffer, CL_TRUE,
                                        0, sizeof(cl_uint) * 0x100, hashResults, 0,
                                        NULL, NULL)) != CL_SUCCESS) {
-                printf("Error %s when calling clEnqueueReadBuffer to fetch results.",
+                printf("Error %s when calling clEnqueueReadBuffer to fetch results.\n",
                        err_to_str(ret));
                 return OCL_ERR_API;
         }
