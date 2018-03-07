@@ -17,6 +17,7 @@ func TestWithExternalPool(t *testing.T) {
 }
 
 func TestXMRigSolver(t *testing.T) {
+	log.Warnf("This test may take a while depending on hashing rate")
 	require := require.New(t)
 
 	port := 44144
@@ -30,13 +31,13 @@ func TestXMRigSolver(t *testing.T) {
 		for clientRequest := range server.RequestChan {
 			log.Debugf("server: Received message: %v", clientRequest.Request)
 			if strings.Compare(clientRequest.Request.RemoteMethod, "login") == 0 {
-				if _, err := clientRequest.Conn.Write([]byte(stratum.TEST_JOB_STR_5)); err != nil {
+				if _, err := clientRequest.Conn.Write([]byte(stratum.AUTH_RESPONSE_STR_4)); err != nil {
 					log.Errorf("Failed to send client test job: %v", err)
 				}
 			} else if strings.Compare(clientRequest.Request.RemoteMethod, "submit") == 0 {
 				params := clientRequest.Request.Parameters.(map[string]interface{})
 				result := params["result"].(string)
-				require.Equal(stratum.RESULT_JOB_STR_5, result)
+				require.Equal(stratum.AUTH_RESPONSE_RESULT_4, result)
 				defer server.StoppableNetListener.Stop()
 				wg.Done()
 			}
