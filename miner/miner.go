@@ -47,5 +47,5 @@ func (m *Miner) InformHashrate(hashes uint32) {
 }
 
 func (m *Miner) LogNewWork(sc *stratum.StratumContext, work *stratum.Work) {
-	log.Infof("\x1B[01;35mnew job\x1B[0m from \x1B[01;37m%v\x1B[0m diff \x1B[01;37m%d \x1B[0m ", sc.RemoteAddr(), int(work.Difficulty))
+	log.Debugf("miner-%d: New work from %s diff %d", m.Id(), sc.Conn.RemoteAddr(), uint32(work.Difficulty))
 }
