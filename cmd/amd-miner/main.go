@@ -67,7 +67,7 @@ func main() {
 	sc := stratum.New()
 
 	hashrateChan := make(chan *miner.HashRate, 10)
-	go miner.SetupHashRateLogger(hashrateChan)
+	go miner.RunDefaultHashRateTrackers(hashrateChan)
 
 	numMiners := len(config.Threads)
 	miners := make([]miner.Interface, numMiners)

@@ -91,7 +91,7 @@ pools:
 	sc := stratum.New()
 
 	hashrateChan := make(chan *miner.HashRate, 10)
-	go miner.SetupHashRateLogger(hashrateChan)
+	go miner.RunDefaultHashRateTrackers(hashrateChan)
 
 	if config.CPUThreads == 0 {
 		if *threads != 0 {
