@@ -12,6 +12,7 @@ import "C"
 import (
 	"fmt"
 	"math"
+	"runtime"
 	"strings"
 	"time"
 	"unsafe"
@@ -32,6 +33,10 @@ const (
 
 //export LOG
 func LOG(logType int, msg string) {
+	// FIXME: Currently broken on Linux
+	if runtime.GOOS != "windows" {
+		return
+	}
 	switch logType {
 	case C.TYPE_DEBUG:
 		log.Debugf(msg)
