@@ -37,6 +37,7 @@ struct gpu_context {
 };
 
 char* err_to_str(int ret);
+void testCLog(char *msg);
 int InitOpenCL(void *ctx_ptr, int num_gpus, int platform_idx, const char *code);
 int XMRSetWork(void *ctx_ptr, void *input_vptr, int input_len, void *target_ptr);
 int XMRRunWork(void *ctx_ptr, void *results_ptr);

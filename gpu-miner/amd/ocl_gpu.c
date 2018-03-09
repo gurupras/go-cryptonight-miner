@@ -40,7 +40,7 @@ extern void LOG(int type, struct GoString n);
 
 void CLOG(int type, const char *fmt, va_list args)
 {
-    char buffer[4096];
+    char buffer[1024];
     struct GoString gs;
     memset(buffer, 0, sizeof(buffer));
     int rc = vsnprintf(buffer, sizeof(buffer), fmt, args);
@@ -71,6 +71,11 @@ void CLOG_WARN(const char *fmt, ...)
   va_start(args, fmt);
   CLOG(TYPE_WARN, fmt, args);
   va_end(args);
+}
+
+void testCLog(char *msg)
+{
+    CLOG_INFO(msg);
 }
 
 char* err_to_str(int ret)

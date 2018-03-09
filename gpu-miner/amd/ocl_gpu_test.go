@@ -29,6 +29,12 @@ func TestGetAMDDevices(t *testing.T) {
 	require.False(fail, "Did not find any AMD GPUs")
 }
 
+func TestCLog(t *testing.T) {
+	// This test should not crash. We don't really check if it logged, but
+	// as long as it doesn't crash, everything is OK
+	logFromC("Hello World")
+}
+
 func TestPrintPlatforms(t *testing.T) {
 	t.Skip("Too primitive")
 	printPlatforms()

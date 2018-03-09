@@ -57,6 +57,11 @@ func err_to_str(ret cl.CL_int) string {
 	return C.GoString(result)
 }
 
+func logFromC(msg string) {
+	cStr := C.CString(msg)
+	C.testCLog(cStr)
+}
+
 func getDeviceMaxComputeUnits(id cl.CL_device_id) cl.CL_uint {
 	count := 0
 	var info interface{}
