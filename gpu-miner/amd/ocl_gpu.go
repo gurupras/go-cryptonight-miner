@@ -16,9 +16,9 @@ import (
 	"time"
 	"unsafe"
 
-	gocm "github.com/gurupras/go-cryptonight-miner"
 	amdgpu_cl "github.com/gurupras/go-cryptonight-miner/gpu-miner/amd/cl"
 	"github.com/gurupras/go-cryptonight-miner/gpu-miner/gpucontext"
+	"github.com/gurupras/minerconfig/pcie"
 	cl "github.com/rainliu/gocl/cl"
 	log "github.com/sirupsen/logrus"
 )
@@ -84,12 +84,12 @@ func getNumPlatforms() cl.CL_uint {
 	return count
 }
 
-func GetDeviceTopology(deviceId cl.CL_device_id) (*gocm.Topology, error) {
+func GetDeviceTopology(deviceId cl.CL_device_id) (*pcie.Topology, error) {
 	var ret C.struct_topology
 	dptr := unsafe.Pointer(&deviceId)
 	rptr := unsafe.Pointer(&ret)
 	C.GetTopology(dptr, rptr)
-	topology := &gocm.Topology{
+	topology := &pcie.Topology{
 		int(ret.bus),
 		int(ret.device),
 		int(ret.function),
@@ -97,7 +97,7 @@ func GetDeviceTopology(deviceId cl.CL_device_id) (*gocm.Topology, error) {
 	return topology, nil
 }
 
-func FindIndexMatchingTopology(topology *gocm.Topology) (int, error) {
+func FindIndexMatchingTopology(topology *pcie.Topology) (int, error) {
 	numPlatforms := getNumPlatforms()
 	for platformIdx := 0; platformIdx < int(numPlatforms); platformIdx++ {
 		amdDevices := getAMDDevices(platformIdx)

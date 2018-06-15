@@ -7,10 +7,10 @@ import (
 
 	ps "github.com/gorillalabs/go-powershell"
 	"github.com/gorillalabs/go-powershell/backend"
-	gocm "github.com/gurupras/go-cryptonight-miner"
+	"github.com/gurupras/minerconfig/pcie"
 )
 
-func winGetPCITopology(deviceInstanceID string) (*gocm.Topology, error) {
+func winGetPCITopology(deviceInstanceID string) (*pcie.Topology, error) {
 	cmdStr := fmt.Sprintf(`gwmi Win32_PnPEntity | where {$_.DeviceID -eq '%v'} | foreach { $_.GetDeviceProperties('DEVPKEY_Device_LocationInfo').deviceProperties.Data }`, deviceInstanceID)
 
 	back := &backend.Local{}
@@ -42,7 +42,7 @@ func winGetPCITopology(deviceInstanceID string) (*gocm.Topology, error) {
 	if function, err = strconv.Atoi(match[3]); err != nil {
 		return nil, err
 	}
-	topology := &gocm.Topology{
+	topology := &pcie.Topology{
 		bus,
 		device,
 		function,

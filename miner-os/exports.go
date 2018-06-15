@@ -4,10 +4,10 @@ import (
 	"fmt"
 	"runtime"
 
-	gocm "github.com/gurupras/go-cryptonight-miner"
+	"github.com/gurupras/minerconfig/pcie"
 )
 
-func GetPCITopology(deviceInstanceID string) (*gocm.Topology, error) {
+func GetPCITopology(deviceInstanceID string) (*pcie.Topology, error) {
 	if runtime.GOOS == "windows" {
 		return winGetPCITopology(deviceInstanceID)
 	} else {
