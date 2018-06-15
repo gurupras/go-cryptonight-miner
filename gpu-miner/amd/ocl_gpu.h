@@ -5,6 +5,7 @@
 #include "OpenCL/opencl.h"
 #else
 #include "CL/opencl.h"
+#include "CL/cl_ext.h"
 #endif
 
 #define MONERO_MEMORY 2097152
@@ -36,8 +37,15 @@ struct gpu_context {
   unsigned int Nonce;
 };
 
+struct topology {
+  int bus;
+  int device;
+  int function;
+};
+
 char* err_to_str(int ret);
 void testCLog(char *msg);
+void GetTopology(void *, void *);
 int InitOpenCL(void *ctx_ptr, int num_gpus, int platform_idx, const char *code);
 int XMRSetWork(void *ctx_ptr, void *input_vptr, int input_len, void *target_ptr);
 int XMRRunWork(void *ctx_ptr, void *results_ptr);

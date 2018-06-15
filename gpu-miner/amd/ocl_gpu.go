@@ -30,6 +30,12 @@ const (
 	setKernelArgError = "Error %s when calling clSetKernelArg for kernel %d, argument %d"
 )
 
+type Topology struct {
+	Bus      int
+	Device   int
+	Function int
+}
+
 //export LOG
 func LOG(logType int, msg string) {
 	// FIXME: Currently broken
@@ -81,6 +87,19 @@ func getNumPlatforms() cl.CL_uint {
 		log.Errorf("Failed to call clGetPlatformIDs: %v", err_to_str(ret))
 	}
 	return count
+}
+
+func GetDeviceTopology(deviceId cl.CL_device_id) (*Topology, error) {
+	var ret C.struct_topology
+	dptr := unsafe.Pointer(&deviceId)
+	rptr := unsafe.Pointer(&ret)
+	C.GetTopology(dptr, rptr)
+	topology := &Topology{
+		int(ret.bus),
+		int(ret.device),
+		int(ret.function),
+	}
+	return topology, nil
 }
 
 func getDeviceInfoBytes(deviceId cl.CL_device_id, info cl.CL_device_info, size cl.CL_size_t) ([]byte, error) {
