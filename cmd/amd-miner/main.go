@@ -12,7 +12,8 @@ import (
 	gpuminer "github.com/gurupras/go-cryptonight-miner/gpu-miner"
 	amdgpu "github.com/gurupras/go-cryptonight-miner/gpu-miner/amd"
 	"github.com/gurupras/go-cryptonight-miner/gpu-miner/gpucontext"
-	"github.com/gurupras/go-cryptonight-miner/miner"
+	miner "github.com/gurupras/go-cryptonight-miner/miner"
+	mineros "github.com/gurupras/go-cryptonight-miner/miner-os"
 	stratum "github.com/gurupras/go-stratum-client"
 	colorable "github.com/mattn/go-colorable"
 	log "github.com/sirupsen/logrus"
@@ -75,6 +76,22 @@ func main() {
 
 	for i := 0; i < numMiners; i++ {
 		threadInfo := config.Threads[i]
+		if threadInfo.DeviceIndex != nil {
+			// We need to figure out the Index for this thread via OpenCL using
+			// something akin to clinfo to find the BDF (Bus, Device, Function)
+			instanceId := config.DeviceInstanceIDs[*threadInfo.DeviceIndex]
+			// First get the PCI Bus, Device, Function from the system for this instance
+			topology, err := mineros.GetPCITopology(instanceId)
+			if err != nil {
+				log.Fatalf("Failed to get topology information for device-instance-id: '%v'", instanceId)
+			}
+			// Now call OpenCL commands to find the device that matches this topology
+			idx, err := amdgpu.FindIndexMatchingTopology(topology)
+			if err != nil {
+				log.Fatalf("%v", err)
+			}
+			threadInfo.Index = idx
+		}
 		miner := gpuminer.NewGPUMiner(sc, threadInfo.Index, threadInfo.Intensity, threadInfo.WorkSize)
 		miner.RegisterHashrateListener(hashrateChan)
 		gpuContexts[i] = miner.Context
