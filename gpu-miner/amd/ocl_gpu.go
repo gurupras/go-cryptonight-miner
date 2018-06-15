@@ -16,6 +16,7 @@ import (
 	"time"
 	"unsafe"
 
+	gocm "github.com/gurupras/go-cryptonight-miner"
 	amdgpu_cl "github.com/gurupras/go-cryptonight-miner/gpu-miner/amd/cl"
 	"github.com/gurupras/go-cryptonight-miner/gpu-miner/gpucontext"
 	cl "github.com/rainliu/gocl/cl"
@@ -29,12 +30,6 @@ var (
 const (
 	setKernelArgError = "Error %s when calling clSetKernelArg for kernel %d, argument %d"
 )
-
-type Topology struct {
-	Bus      int
-	Device   int
-	Function int
-}
 
 //export LOG
 func LOG(logType int, msg string) {
@@ -89,17 +84,31 @@ func getNumPlatforms() cl.CL_uint {
 	return count
 }
 
-func GetDeviceTopology(deviceId cl.CL_device_id) (*Topology, error) {
+func GetDeviceTopology(deviceId cl.CL_device_id) (*gocm.Topology, error) {
 	var ret C.struct_topology
 	dptr := unsafe.Pointer(&deviceId)
 	rptr := unsafe.Pointer(&ret)
 	C.GetTopology(dptr, rptr)
-	topology := &Topology{
+	topology := &gocm.Topology{
 		int(ret.bus),
 		int(ret.device),
 		int(ret.function),
 	}
 	return topology, nil
+}
+
+func FindIndexMatchingTopology(topology *gocm.Topology) (int, error) {
+	numPlatforms := getNumPlatforms()
+	for platformIdx := 0; platformIdx < int(numPlatforms); platformIdx++ {
+		amdDevices := getAMDDevices(platformIdx)
+		for _, ctx := range amdDevices {
+			devTopology, _ := GetDeviceTopology(ctx.DeviceID)
+			if *devTopology == *topology {
+				return ctx.DeviceIndex, nil
+			}
+		}
+	}
+	return -1, fmt.Errorf("Failed to find an OpenCL device matching topology: %v\n", *topology)
 }
 
 func getDeviceInfoBytes(deviceId cl.CL_device_id, info cl.CL_device_info, size cl.CL_size_t) ([]byte, error) {
