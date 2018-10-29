@@ -5,8 +5,8 @@ import (
 	"regexp"
 	"strconv"
 
-	ps "github.com/gorillalabs/go-powershell"
-	"github.com/gorillalabs/go-powershell/backend"
+	ps "github.com/gurupras/go-powershell"
+	"github.com/gurupras/go-powershell/backend"
 	"github.com/gurupras/minerconfig/pcie"
 )
 
